@@ -14,11 +14,11 @@ export const Nav = () => {
 const NavLinks = () => {
     return (
         <ul>
-            <Links link="#home" name="Home" />
-            <Links link="#about" name="About" />
-            <Links link="#services" name="Services" />
-            <Links link="#blogs" name="Blogs" />
-            <Links link="#contact" name="Contact" />
+            <Links link="#home" name="Users" />
+            <Links link="#about" name="Lead" />
+            <Links link="#services" name="Lead Source" />
+            <Links link="#blogs" name="Reason" />
+            <Links link="#contact" name="Pipelines" />
         </ul>
     )
 }
