@@ -1,6 +1,15 @@
 import logginStyles from "./Login.module.css";
+import { useNavigate } from 'react-router-dom';
 // console.log(logginStyles);
 export const LoginPage = () => {
+    const navigate = useNavigate();
+    
+    addEventListener("submit", (e) => {
+        e.preventDefault();
+        console.log("Form submitted");
+        navigate('/dashboard');
+    });
+
     return (
         <div className={logginStyles["container"]}>
             <div className={logginStyles["login-page"]}>
@@ -9,7 +18,7 @@ export const LoginPage = () => {
                 </div>
                 <div className={logginStyles["login-form"]}>
                     <h2>Login to Your Account</h2>
-                    <form>
+                    <form action="" method="POST"> 
                         <div className={logginStyles["form-group"]}>
                             <label htmlFor="email">Email:</label>
                             <input type="text" id="email" name="email" required />
