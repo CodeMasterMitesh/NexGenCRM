@@ -1,0 +1,107 @@
+/* Users page styles */
+.comman-page {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.add-btn{
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.add-user-btn:hover, .add-lead-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Table container */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+/* Table styles */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead, .table thead {
+    background-color: #f7fafc;
+}
+
+.table th, .table th {
+    padding: 15px;
+    text-align: left;
+    color: #2d3748;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #4a5568;
+}
+
+.table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Role badge */
+.role-badge, .source-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    background-color: #e6f7ff;
+    color: #1890ff;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Action buttons */
+.action-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: opacity 0.3s ease;
+}
+
+.action-btn:hover {
+    opacity: 0.8;
+}
+
+.action-btn.edit {
+    background-color: #4299e1;
+    color: white;
+}
+
+.action-btn.delete {
+    background-color: #f56565;
+    color: white;
+}

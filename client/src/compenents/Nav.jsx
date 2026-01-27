@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export const Nav = () => {
     return (
         <nav>
@@ -14,17 +16,19 @@ export const Nav = () => {
 const NavLinks = () => {
     return (
         <ul>
-            <Links link="#home" name="Users" />
-            <Links link="#about" name="Lead" />
-            <Links link="#services" name="Lead Source" />
-            <Links link="#blogs" name="Reason" />
-            <Links link="#contact" name="Pipelines" />
+            <Links link="/dashboard" name="Dashboard" />
+            <Links link="/users" name="Users" />
+            <Links link="/leads" name="Leads" />
+            <Links link="/lead-source" name="Lead Sources" />
+            <Links link="/customers" name="Customers" />
+            <Links link="/reports" name="Reports" />
         </ul>
     )
 }
 
+// Simple link component using React Router
 const Links = ({link, name}) => {
     return (
-        <li><a href={link}>{name}</a></li>
+        <li><Link to={link}>{name}</Link></li>
     )
 }

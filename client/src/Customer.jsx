@@ -1,23 +1,23 @@
 import "./Style.css";
 
-const Users = () => {
-    // Sample users data
-    const users = [
-        { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Sales" },
-        { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "Manager" },
-        { id: 4, name: "Sarah Williams", email: "sarah@example.com", role: "Sales" },
+const Customers = () => {
+    // Sample customers data
+    const customers = [
+        { id: 1, name: "John Doe", email: "john@example.com", source: "Facebook" },
+        { id: 2, name: "Jane Smith", email: "jane@example.com", source: "Website" },
+        { id: 3, name: "Mike Johnson", email: "mike@example.com", source: "Cold Call" },
+        { id: 4, name: "Sarah Williams", email: "sarah@example.com", source: "Referral" },
     ];
 
     return (
         <div className="comman-page">
             {/* Page title */}
             <div className="page-header">
-                <h1 className="page-title">Users Management</h1>
-                <button className="add-btn">+ Add User</button>
+                <h1 className="page-title">Customers Management</h1>
+                <button className="add-btn">+ Add Customer</button>
             </div>
             
-            {/* Users table */}
+            {/* Customers table */}
             <div className="table-container">
                 <table className="table">
                     <thead>
@@ -25,18 +25,18 @@ const Users = () => {
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Role</th>
+                            <th>Source</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map(user => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-                                <td>{user.name}</td>
-                                <td>{user.email}</td>
+                        {customers.map(customer => (
+                            <tr key={customer.id}>
+                                <td>{customer.id}</td>
+                                <td>{customer.name}</td>
+                                <td>{customer.email}</td>
                                 <td>
-                                    <span className="role-badge">{user.role}</span>
+                                    <span className="source-badge">{customer.source}</span>
                                 </td>
                                 <td>
                                     <button className="action-btn edit">Edit</button>
@@ -51,4 +51,4 @@ const Users = () => {
     );
 };
 
-export default Users;
+export default Customers;

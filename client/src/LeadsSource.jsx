@@ -1,42 +1,40 @@
 import "./Style.css";
 
-const Users = () => {
+const LeadSource = () => {
     // Sample users data
-    const users = [
-        { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Sales" },
-        { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "Manager" },
-        { id: 4, name: "Sarah Williams", email: "sarah@example.com", role: "Sales" },
+    const leadSources = [
+        { id: 1, name: "Facebook", description: "Facebook" },
+        { id: 2, name: "Website", description: "Website" },
+        { id: 3, name: "Cold Call", description: "Cold Call" },
+        { id: 4, name: "Referral", description: "Referral" },
     ];
 
     return (
         <div className="comman-page">
             {/* Page title */}
             <div className="page-header">
-                <h1 className="page-title">Users Management</h1>
-                <button className="add-btn">+ Add User</button>
+                <h1 className="page-title">Lead Sources Management</h1>
+                <button className="add-btn">+ Add Lead Source</button>
             </div>
             
-            {/* Users table */}
+            {/* Leads table */}
             <div className="table-container">
                 <table className="table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
+                            <th>Description</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map(user => (
-                            <tr key={user.id}>
-                                <td>{user.id}</td>
-                                <td>{user.name}</td>
-                                <td>{user.email}</td>
+                        {leadSources.map(leadSource => (
+                            <tr key={leadSource.id}>
+                                <td>{leadSource.id}</td>
+                                <td>{leadSource.name}</td>
                                 <td>
-                                    <span className="role-badge">{user.role}</span>
+                                    <span className="source-badge">{leadSource.description}</span>
                                 </td>
                                 <td>
                                     <button className="action-btn edit">Edit</button>
@@ -51,4 +49,4 @@ const Users = () => {
     );
 };
 
-export default Users;
+export default LeadSource;
