@@ -1,6 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import "./Style.css";
-
+// import { EventsBtn } from "./compenents/Events";
+import {Greeting} from "./compenents/EventProps";
 const Users = () => {
+    const navigate = useNavigate();
+
     // Sample users data
     const users = [
         { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
@@ -14,9 +18,15 @@ const Users = () => {
             {/* Page title */}
             <div className="page-header">
                 <h1 className="page-title">Users Management</h1>
-                <button className="add-btn">+ Add User</button>
+                <button 
+                    className="add-btn"
+                    onClick={() => navigate("/add-user")}
+                >
+                    + Add User
+                </button>
             </div>
-            
+            {/* <EventsBtn /> */}
+            <Greeting />
             {/* Users table */}
             <div className="table-container">
                 <table className="table">

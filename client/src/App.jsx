@@ -6,6 +6,7 @@ import Layout from "./compenents/Layout.jsx";
 import "./compenents/Layout.css";
 import Dashboard from "./Dashboard.jsx";
 import Users from "./Users.jsx";
+import AddUser from "./AddUser.jsx";
 import Leads from "./Leads.jsx";
 import Customers from "./Customer.jsx";
 import LeadSource from "./LeadsSource.jsx";
@@ -29,6 +30,10 @@ let router = createBrowserRouter([
         {
           path: "/users",
           element: <Users/>,
+        },
+        {
+          path: "/add-user",
+          element: <AddUser/>,
         },
         {
           path: "/leads",
