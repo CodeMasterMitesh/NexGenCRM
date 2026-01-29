@@ -106,3 +106,39 @@ const AddUser = () => {
 };
 
 export default AddUser;
+// Employee Name
+// Email
+// admin@campuslite.com
+// Password
+// •••••••••••
+// Role
+// Employee
+// Phone
+// Branch
+// -- Select Branch --
+// Profile Photo
+// No file chosen
+// Birthdate
+// dd-mm-yyyy
+// Gender
+// -- Select --
+// Marital Status
+// -- Select --
+// Joining Date
+// dd-mm-yyyy
+// Resign Date
+// dd-mm-yyyy
+// IN Time
+// --:--
+// OUT Time
+// --:--
+// Address
+// Street address
+// Area
+// City
+// Pincode
+// State
+// Country
+// Aadhar Card (Attachment)No file chosen
+// PAN Card (Attachment)No file chosen
+// Passport (Attachment)

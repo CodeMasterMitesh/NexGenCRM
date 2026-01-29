@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import "./Style.css";
 // import { EventsBtn } from "./compenents/Events";
-import {Greeting} from "./compenents/EventProps";
+// import {Greeting} from "./compenents/EventProps";
+import {EventPropagation} from "./compenents/EventPropagation";
 const Users = () => {
     const navigate = useNavigate();
 
@@ -26,7 +27,8 @@ const Users = () => {
                 </button>
             </div>
             {/* <EventsBtn /> */}
-            <Greeting />
+            {/* <Greeting /> */}
+            {/* <EventPropagation /> */}
             {/* Users table */}
             <div className="table-container">
                 <table className="table">
