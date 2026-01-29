@@ -108,14 +108,8 @@ const AddUser = () => {
 export default AddUser;
 // Employee Name
 // Email
-// admin@campuslite.com
-// Password
-// •••••••••••
-// Role
 // Employee
 // Phone
-// Branch
-// -- Select Branch --
 // Profile Photo
 // No file chosen
 // Birthdate
@@ -128,10 +122,6 @@ export default AddUser;
 // dd-mm-yyyy
 // Resign Date
 // dd-mm-yyyy
-// IN Time
-// --:--
-// OUT Time
-// --:--
 // Address
 // Street address
 // Area
