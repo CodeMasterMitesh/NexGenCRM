@@ -3,6 +3,7 @@ import "./Style.css";
 // import { EventsBtn } from "./compenents/Events";
 // import {Greeting} from "./compenents/EventProps";
 import {EventPropagation} from "./compenents/EventPropagation";
+import { StateManagement } from "./compenents/StateManagement";
 const Users = () => {
     const navigate = useNavigate();
 
@@ -19,6 +20,7 @@ const Users = () => {
             {/* Page title */}
             <div className="page-header">
                 <h1 className="page-title">Users Management</h1>
+                <StateManagement className="add-btn" />
                 <button 
                     className="add-btn"
                     onClick={() => navigate("/add-user")}

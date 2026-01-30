@@ -10,7 +10,7 @@ const Dashboard = () => {
             <div className="stats-cards">
                 <StatsCard 
                     title="Total Customers" 
-                    value="1,234" 
+                    value="1,238" 
                     icon="👥" 
                     color="#667eea" 
                 />

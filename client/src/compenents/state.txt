@@ -1,0 +1,45 @@
+// what is state in react js
+
+In React.js, state is a built-in mechanism for a component to store and manage data that can change over time. When a component's state changes (due to user interactions, network responses, etc.), React automatically re-renders the component to reflect the new data in the UI. 
+Key Characteristics of State
+Component's Memory: State allows components to "remember" information between renders. Without it, local variables would disappear every time the function finishes executing.
+Dynamic and Interactive: State is what makes components dynamic. It's used for managing things like form inputs, UI toggles (e.g., showing/hiding a description), the current count in a counter, or data fetched from an API.
+Private and Local: State is private and local to the component that declares it. Other components (even children or parents, unless passed as props) cannot directly access or modify it.
+Triggers Re-renders: The primary feature of state is that updating it signals React that the UI needs to be updated. React then re-renders the component with the new state values.
+Immutable (Treat as Read-only): You should never directly modify the state object/variable. Instead, you use a dedicated "setter" function (e.g., setState in class components or setCount from the useState hook in functional components) to update the state and queue a new render.
+
+// what us hook in react js
+
+React Hooks are functions that allow you to use React features, such as state and lifecycle methods, from within function components. Introduced in React 16.8, they eliminate the need for class components to manage state or side effects, leading to cleaner, more readable, and modular code. 
+Key Concepts
+Enable State in Functions: Before Hooks, only class components could have state. The useState Hook lets function components track data or properties that need to change over time.
+Manage Side Effects: Hooks like useEffect provide a unified way to handle side effects (e.g., data fetching, DOM manipulation, subscriptions) that previously required class lifecycle methods like componentDidMount and componentDidUpdate.
+Promote Reusability: You can extract stateful logic into custom Hooks (functions starting with the prefix use) and reuse them across multiple components, avoiding complex patterns like higher-order components or render props.
+Simplify Code: Hooks generally require less boilerplate code compared to class components and help organize related logic (like setup and cleanup for a subscription) in one place, rather than splitting it across different lifecycle methods. 
+Core Built-in Hooks 
+React provides several built-in Hooks for various functionalities: 
+useState: Declares a state variable and a function to update it.
+useEffect: Synchronizes a component with an external system or performs side effects after a render.
+useContext: Subscribes to React context, allowing components to receive information from distant parents without prop drilling.
+useReducer: An alternative to useState for managing complex state logic, often involving multiple sub-values or intricate state transitions.
+useRef: Declares a mutable ref object that persists values between renders and does not cause a re-render when updated; often used to access DOM nodes.
+useMemo: Caches the result of an expensive calculation to optimize performance, recomputing only when dependencies change.
+useCallback: Caches a function definition to prevent unnecessary re-renders of optimized child components. 
+Rules of Hooks
+Hooks are regular JavaScript functions, but they have two important rules that must be followed for them to work correctly: 
+Only call Hooks at the top level: Do not call Hooks inside loops, conditions, or nested functions. This ensures Hooks are called in the same order during every render.
+Only call Hooks from React functions: Hooks can only be called from inside React function components or custom Hooks. 
+Following these rules ensures that the state of Hooks is correctly preserved between re-renders and allows tools like the eslint-plugin-react-hooks to find potential bugs automatically. 
+
+
+
+// what us usestate hook in react js
+useState is a built-in React hook that allows functional components to manage and update state variables. State is the "memory" of a component—data or properties that change over time and affect what is displayed in the UI. 
+Key Concepts
+Enables State in Functional Components: Before Hooks (React 16.8+), only class components could have state. useState allows functional components to use this core React feature, leading to cleaner, more concise code.
+Triggers Re-renders: When a state variable is updated using its setter function, React automatically re-renders the component (and its children) with the new data, ensuring the UI stays in sync with the state.
+Returns a Pair of Values: The useState hook returns an array with exactly two elements, which are typically destructured using array destructuring syntax:
+The current state value (e.g., count).
+A setter function (e.g., setCount) that updates the state and triggers a re-render.
+Can Hold Any Data Type: Unlike class component state (which is always an object), useState can manage any type of data, including strings, numbers, booleans, arrays, and objects.
+Initial Value as Argument: useState accepts the initial value of the state variable as its single argument, which is used only for the component's initial render
