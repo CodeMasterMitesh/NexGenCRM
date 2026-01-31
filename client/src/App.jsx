@@ -8,6 +8,7 @@ import Dashboard from "./Dashboard.jsx";
 import Users from "./Users.jsx";
 import AddUser from "./AddUser.jsx";
 import Leads from "./Leads.jsx";
+import AddLead from "./AddLead.jsx";
 import Customers from "./Customer.jsx";
 import LeadSource from "./LeadsSource.jsx";
 import {
@@ -38,6 +39,10 @@ let router = createBrowserRouter([
         {
           path: "/leads",
           element: <Leads/>,
+        },
+        {
+          path: "/add-lead",
+          element: <AddLead/>,
         },
         {
           path: "/customers",

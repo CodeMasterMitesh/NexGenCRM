@@ -2,12 +2,23 @@ import { Link } from "react-router-dom";
 
 export const Nav = () => {
     return (
-        <nav>
-            <div className="logo">
-                <h2>NextGenCRM</h2>
-            </div>
-            <div className="nav-links">
-                <NavLinks />
+        <nav className="navbar navbar-expand-lg navbar-dark crm-navbar">
+            <div className="container-fluid">
+                <Link className="navbar-brand fw-bold" to="/dashboard">NextGenCRM</Link>
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#crmNavbar"
+                    aria-controls="crmNavbar"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="crmNavbar">
+                    <NavLinks />
+                </div>
             </div>
         </nav>
     )
@@ -15,7 +26,7 @@ export const Nav = () => {
 
 const NavLinks = () => {
     return (
-        <ul>
+        <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
             <Links link="/dashboard" name="Dashboard" />
             <Links link="/users" name="Users" />
             <Links link="/leads" name="Leads" />
@@ -29,6 +40,8 @@ const NavLinks = () => {
 // Simple link component using React Router
 const Links = ({link, name}) => {
     return (
-        <li><Link to={link}>{name}</Link></li>
+        <li className="nav-item">
+            <Link className="nav-link" to={link}>{name}</Link>
+        </li>
     )
 }

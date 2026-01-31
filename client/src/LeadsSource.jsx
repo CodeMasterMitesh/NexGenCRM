@@ -10,16 +10,20 @@ const LeadSource = () => {
     ];
 
     return (
-        <div className="comman-page">
-            {/* Page title */}
-            <div className="page-header">
-                <h1 className="page-title">Lead Sources Management</h1>
-                <button className="add-btn">+ Add Lead Source</button>
+        <div className="comman-page container-fluid py-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h1 className="page-title mb-1">Lead Sources Management</h1>
+                    <p className="text-muted mb-0">Manage lead acquisition channels</p>
+                </div>
+                <button className="btn btn-primary">+ Add Lead Source</button>
             </div>
             
             {/* Leads table */}
-            <div className="table-container">
-                <table className="table">
+            <div className="card border-0 shadow-sm table-card">
+                <div className="card-body p-0">
+                    <div className="table-responsive">
+                        <table className="table table-striped align-middle mb-0">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -34,16 +38,20 @@ const LeadSource = () => {
                                 <td>{leadSource.id}</td>
                                 <td>{leadSource.name}</td>
                                 <td>
-                                    <span className="source-badge">{leadSource.description}</span>
+                                    <span className="badge text-bg-info">{leadSource.description}</span>
                                 </td>
                                 <td>
-                                    <button className="action-btn edit">Edit</button>
-                                    <button className="action-btn delete">Delete</button>
+                                    <div className="btn-group" role="group">
+                                        <button className="btn btn-sm btn-outline-primary">Edit</button>
+                                        <button className="btn btn-sm btn-outline-danger">Delete</button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -13,7 +13,7 @@ export const LoginPage = () => {
     return (
         <div className={logginStyles["container"]}>
             <div className={logginStyles["login-page"]}>
-                <div className={logginStyles["login-form"]}>
+                <div className={`${logginStyles["login-form"]} card border-0`}> 
                     <div className={logginStyles["logo"]}>
                         <img src="/nexgencrm_new_logo.png" alt="App Logo" />
                     </div>
@@ -26,6 +26,7 @@ export const LoginPage = () => {
                                 type="email" 
                                 id="email" 
                                 name="email" 
+                                className="form-control"
                                 placeholder="Enter your email"
                                 required 
                             />
@@ -36,18 +37,19 @@ export const LoginPage = () => {
                                 type="password" 
                                 id="password" 
                                 name="password" 
+                                className="form-control"
                                 placeholder="Enter your password"
                                 required 
                             />
                         </div>
                         <div className={logginStyles["form-options"]}>
-                            <label className={logginStyles["remember-me"]}>
-                                <input type="checkbox" />
-                                <span>Remember me</span>
+                            <label className={`${logginStyles["remember-me"]} form-check d-flex align-items-center gap-2`}>
+                                <input className="form-check-input" type="checkbox" />
+                                <span className="form-check-label">Remember me</span>
                             </label>
                             <a href="#" className={logginStyles["forgot-password"]}>Forgot Password?</a>
                         </div>
-                        <button type="submit" className={logginStyles["login-btn"]}>Sign In</button>
+                        <button type="submit" className={`${logginStyles["login-btn"]} btn btn-primary w-100`}>Sign In</button>
                         <div className={logginStyles["signup-link"]}>
                             Don't have an account? <a href="#">Sign Up</a>
                         </div>

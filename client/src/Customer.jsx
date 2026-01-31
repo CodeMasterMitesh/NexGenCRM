@@ -10,16 +10,20 @@ const Customers = () => {
     ];
 
     return (
-        <div className="comman-page">
-            {/* Page title */}
-            <div className="page-header">
-                <h1 className="page-title">Customers Management</h1>
-                <button className="add-btn">+ Add Customer</button>
+        <div className="comman-page container-fluid py-4">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h1 className="page-title mb-1">Customers Management</h1>
+                    <p className="text-muted mb-0">Maintain your customer directory</p>
+                </div>
+                <button className="btn btn-primary">+ Add Customer</button>
             </div>
             
             {/* Customers table */}
-            <div className="table-container">
-                <table className="table">
+            <div className="card border-0 shadow-sm table-card">
+                <div className="card-body p-0">
+                    <div className="table-responsive">
+                        <table className="table table-striped align-middle mb-0">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -36,16 +40,20 @@ const Customers = () => {
                                 <td>{customer.name}</td>
                                 <td>{customer.email}</td>
                                 <td>
-                                    <span className="source-badge">{customer.source}</span>
+                                    <span className="badge text-bg-info">{customer.source}</span>
                                 </td>
                                 <td>
-                                    <button className="action-btn edit">Edit</button>
-                                    <button className="action-btn delete">Delete</button>
+                                    <div className="btn-group" role="group">
+                                        <button className="btn btn-sm btn-outline-primary">Edit</button>
+                                        <button className="btn btn-sm btn-outline-danger">Delete</button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );

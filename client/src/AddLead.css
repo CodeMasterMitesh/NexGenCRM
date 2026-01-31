@@ -1,5 +1,5 @@
-/* Add User page styles */
-.add-user-page {
+/* Add Lead page styles */
+.add-lead-page {
     width: 100%;
     margin: 0 auto;
 }
@@ -20,25 +20,16 @@
     margin: 0;
 }
 
-/* Form container */
 .form-container {
     background: white;
     border-radius: 16px;
 }
 
-.user-form {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Form group */
-/* Keep Bootstrap-driven form styling */
-.user-form .form-label {
+.lead-form .form-label {
     color: #2d3748;
     font-weight: 600;
 }
 
-/* Mobile responsive */
 @media (max-width: 600px) {
     .form-header h1 {
         font-size: 24px;
