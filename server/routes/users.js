@@ -1,60 +1,117 @@
-import { Router } from "express";
+import express from "express";
+import pool from "../config/db.js";
 
-const router = Router();
+const router = express.Router();
 
-let users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    mobile: "+1 555-888-3322",
-    role: "Admin",
-    department: "Operations",
-    status: "Active"
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    mobile: "+1 555-123-7788",
-    role: "Sales",
-    department: "Sales",
-    status: "Active"
+// ========================
+// GET - Fetch all users
+// ========================
+router.get("/", async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    const [users] = await connection.query("SELECT * FROM users");
+    connection.release();
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-];
-
-router.get("/", (req, res) => {
-  res.json(users);
 });
 
-router.get("/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const user = users.find((u) => u.id === id);
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+// ========================
+// GET - Fetch single user by ID
+// ========================
+router.get("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const connection = await pool.getConnection();
+    const [users] = await connection.query("SELECT * FROM users WHERE id = ?", [id]);
+    connection.release();
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(users[0]);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-  return res.json(user);
 });
 
-router.post("/", (req, res) => {
-  const { name, email, mobile, role, department, status } = req.body;
+// ========================
+// POST - Create new user
+// ========================
+router.post("/", async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      mobile,
+      role,
+      department,
+      designation,
+      dateOfBirth,
+      gender,
+      address,
+      city,
+      state,
+      country,
+      status,
+      profilePhoto,
+    } = req.body;
 
-  if (!name || !email || !mobile) {
-    return res.status(400).json({ message: "name, email, and mobile are required" });
+    // Validation
+    if (!name || !email || !mobile) {
+      return res.status(400).json({
+        message: "name, email, and mobile are required",
+      });
+    }
+
+    const connection = await pool.getConnection();
+    const insertSQL = `
+      INSERT INTO users (
+        name, email, mobile, role, department, designation,
+        dateOfBirth, gender, address, city, state, country,
+        status, profilePhoto
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await connection.query(insertSQL, [
+      name,
+      email,
+      mobile,
+      role || "Sales",
+      department || "",
+      designation || "",
+      dateOfBirth || null,
+      gender || "",
+      address || "",
+      city || "",
+      state || "",
+      country || "",
+      status || "Active",
+      profilePhoto || "",
+    ]);
+
+    connection.release();
+
+    res.status(201).json({
+      id: result.insertId,
+      name,
+      email,
+      mobile,
+      role: role || "Sales",
+      department,
+      status: status || "Active",
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const newUser = {
-    id: users.length ? users[users.length - 1].id + 1 : 1,
-    name,
-    email,
-    mobile,
-    role: role || "Sales",
-    department: department || "",
-    status: status || "Active"
-  };
-
-  users.push(newUser);
-  return res.status(201).json(newUser);
 });
 
 export default router;
