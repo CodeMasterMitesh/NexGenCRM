@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.js";
-import createTables from "./config/schema.js";
+import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
 
 const app = express();
@@ -16,22 +16,25 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", usersRouter);
 
-// Initialize database on startup
-const initializeDatabase = async () => {
+// Initialize database and start server
+const startServer = async () => {
   try {
-    console.log("\n🔄 Initializing database...");
-    await createTables();
+    console.log("\n🔄 Connecting to MongoDB...");
+    await connectDB();
+    console.log("✓ MongoDB connected!\n");
+
+    console.log("🌱 Seeding database with sample data...");
     await seedUsers();
-    console.log("✓ Database initialized!\n");
+    console.log("✓ Database seeded!\n");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`📝 API: http://localhost:${PORT}/api/users`);
+    });
   } catch (error) {
-    console.error("Database initialization error:", error);
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
   }
 };
 
-// Call initialization before starting server
-// await initializeDatabase();
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 API: http://localhost:${PORT}/api/users`);
-});
+startServer();

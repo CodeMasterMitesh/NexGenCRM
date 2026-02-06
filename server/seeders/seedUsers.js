@@ -1,8 +1,6 @@
-import pool from "../config/db.js";
+import User from "../config/schema.js";
 
 const seedUsers = async () => {
-  const connection = await pool.getConnection();
-
   try {
     console.log("Seeding users data...");
 
@@ -14,7 +12,7 @@ const seedUsers = async () => {
         role: "Admin",
         department: "Operations",
         designation: "Operations Manager",
-        dateOfBirth: "1990-05-15",
+        dateOfBirth: new Date("1990-05-15"),
         gender: "Male",
         address: "123 Main St",
         city: "New York",
@@ -30,7 +28,7 @@ const seedUsers = async () => {
         role: "Sales",
         department: "Sales",
         designation: "Sales Executive",
-        dateOfBirth: "1992-08-22",
+        dateOfBirth: new Date("1992-08-22"),
         gender: "Female",
         address: "456 Oak Ave",
         city: "Los Angeles",
@@ -46,7 +44,7 @@ const seedUsers = async () => {
         role: "Manager",
         department: "Customer Success",
         designation: "CS Manager",
-        dateOfBirth: "1988-12-10",
+        dateOfBirth: new Date("1988-12-10"),
         gender: "Male",
         address: "789 Pine Rd",
         city: "Chicago",
@@ -62,7 +60,7 @@ const seedUsers = async () => {
         role: "Sales",
         department: "Sales",
         designation: "Sales Lead",
-        dateOfBirth: "1995-03-18",
+        dateOfBirth: new Date("1995-03-18"),
         gender: "Female",
         address: "321 Elm St",
         city: "Houston",
@@ -78,7 +76,7 @@ const seedUsers = async () => {
         role: "Support",
         department: "Support",
         designation: "Support Specialist",
-        dateOfBirth: "1991-07-25",
+        dateOfBirth: new Date("1991-07-25"),
         gender: "Male",
         address: "654 Maple Dr",
         city: "Phoenix",
@@ -89,48 +87,16 @@ const seedUsers = async () => {
       },
     ];
 
-    const insertSQL = `
-      INSERT INTO users (
-        name, email, mobile, role, department, designation, 
-        dateOfBirth, gender, address, city, state, country, 
-        status, profilePhoto
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    // Clear existing users
+    await User.deleteMany({});
+    console.log("Cleared existing users");
 
-    // Insert each user
-    for (const user of users) {
-      try {
-        await connection.query(insertSQL, [
-          user.name,
-          user.email,
-          user.mobile,
-          user.role,
-          user.department,
-          user.designation,
-          user.dateOfBirth,
-          user.gender,
-          user.address,
-          user.city,
-          user.state,
-          user.country,
-          user.status,
-          user.profilePhoto,
-        ]);
-        console.log(`✓ Inserted user: ${user.name}`);
-      } catch (error) {
-        if (error.code === "ER_DUP_ENTRY") {
-          console.log(`⚠ User already exists: ${user.email}`);
-        } else {
-          throw error;
-        }
-      }
-    }
-
-    console.log("✓ Seeding completed successfully!");
+    // Insert new users
+    const result = await User.insertMany(users);
+    console.log(`✓ Inserted ${result.length} users successfully!`);
   } catch (error) {
     console.error("Error seeding users:", error.message);
-  } finally {
-    connection.release();
+    throw error;
   }
 };
 

@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../config/db.js";
+import User from "../config/schema.js";
 
 const router = express.Router();
 
@@ -8,9 +8,7 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [users] = await connection.query("SELECT * FROM users");
-    connection.release();
+    const users = await User.find();
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -23,18 +21,18 @@ router.get("/", async (req, res) => {
 // ========================
 router.get("/:id", async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const connection = await pool.getConnection();
-    const [users] = await connection.query("SELECT * FROM users WHERE id = ?", [id]);
-    connection.release();
+    const user = await User.findById(req.params.id);
 
-    if (users.length === 0) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(users[0]);
+    res.json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -68,47 +66,76 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const connection = await pool.getConnection();
-    const insertSQL = `
-      INSERT INTO users (
-        name, email, mobile, role, department, designation,
-        dateOfBirth, gender, address, city, state, country,
-        status, profilePhoto
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const [result] = await connection.query(insertSQL, [
-      name,
-      email,
-      mobile,
-      role || "Sales",
-      department || "",
-      designation || "",
-      dateOfBirth || null,
-      gender || "",
-      address || "",
-      city || "",
-      state || "",
-      country || "",
-      status || "Active",
-      profilePhoto || "",
-    ]);
-
-    connection.release();
-
-    res.status(201).json({
-      id: result.insertId,
+    const newUser = new User({
       name,
       email,
       mobile,
       role: role || "Sales",
       department,
+      designation,
+      dateOfBirth,
+      gender,
+      address,
+      city,
+      state,
+      country,
       status: status || "Active",
+      profilePhoto,
     });
+
+    const savedUser = await newUser.save();
+
+    res.status(201).json(savedUser);
   } catch (error) {
     console.error("Error creating user:", error);
-    if (error.code === "ER_DUP_ENTRY") {
+    if (error.code === 11000) {
       return res.status(400).json({ message: "Email already exists" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// PUT - Update user
+// ========================
+router.put("/:id", async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// DELETE - Delete user
+// ========================
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully", user: deletedUser });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID" });
     }
     res.status(500).json({ message: "Internal server error" });
   }

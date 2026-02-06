@@ -1,20 +1,23 @@
-# NexGenCRM Backend Setup Guide
+# NexGenCRM Backend Setup Guide (MongoDB Edition)
 
 ## Overview
-This guide explains how to set up the Express.js backend server for the NexGenCRM application. The backend provides REST APIs for managing users, leads, and other CRM data.
+This guide explains how to set up the Express.js backend server for the NexGenCRM application using **MongoDB** as the database. The backend provides REST APIs for managing users, leads, and other CRM data with a NoSQL database approach.
 
 ---
 
 ## Table of Contents
 1. [Prerequisites](#prerequisites)
-2. [Project Structure](#project-structure)
-3. [Installation & Setup](#installation--setup)
-4. [Environment Variables](#environment-variables)
-5. [Dependencies](#dependencies)
-6. [Server Configuration](#server-configuration)
-7. [API Routes](#api-routes)
-8. [Running the Server](#running-the-server)
-9. [Testing APIs](#testing-apis)
+2. [Database Setup](#database-setup)
+3. [Project Structure](#project-structure)
+4. [Installation & Setup](#installation--setup)
+5. [Environment Variables](#environment-variables)
+6. [Dependencies](#dependencies)
+7. [Database Configuration](#database-configuration)
+8. [Schema Definition](#schema-definition)
+9. [API Routes](#api-routes)
+10. [Running the Server](#running-the-server)
+11. [Testing APIs](#testing-apis)
+12. [Database Seeding](#database-seeding)
 
 ---
 
@@ -23,8 +26,58 @@ This guide explains how to set up the Express.js backend server for the NexGenCR
 Before starting, ensure you have:
 - **Node.js** installed (v14 or higher) - [Download](https://nodejs.org/)
 - **npm** (Node Package Manager) - comes with Node.js
+- **MongoDB Community Edition** installed - [Download](https://www.mongodb.com/try/download/community)
+  - OR use **MongoDB Atlas** (Cloud) - [Free Tier](https://www.mongodb.com/cloud/atlas)
 - **Postman** or **Thunder Client** (optional, for API testing)
+- **MongoDB Compass** (optional, GUI for MongoDB)
 - **VS Code** or any code editor
+
+---
+
+## Database Setup
+
+### Option 1: Local MongoDB Installation
+
+#### On Windows:
+1. Download MongoDB Community Edition from [mongodb.com](https://www.mongodb.com/try/download/community)
+2. Run the installer (`.msi` file)
+3. Choose "Install MongoDB as a Windows Service"
+4. MongoDB will start automatically and run as a service
+5. Default connection: `mongodb://localhost:27017`
+
+#### On Mac:
+```bash
+# Using Homebrew
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+```
+
+#### On Linux:
+```bash
+sudo apt-get update
+sudo apt-get install -y mongodb
+sudo systemctl start mongodb
+```
+
+**Verify Installation:**
+```bash
+# Open MongoDB Shell
+mongosh
+
+# You should see: test>
+# Type: exit
+```
+
+### Option 2: MongoDB Atlas (Cloud - Recommended for Learning)
+
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a free account
+3. Create a new cluster (Free tier)
+4. Create a database user (username/password)
+5. Whitelist your IP address (or Allow Access from Anywhere: 0.0.0.0/0)
+6. Copy connection string: `mongodb+srv://username:password@cluster.mongodb.net/nexgencrm`
+7. Replace `username`, `password`, and cluster name in your `.env`
 
 ---
 
@@ -32,18 +85,24 @@ Before starting, ensure you have:
 
 ```
 server/
-├── index.js              # Main server entry point
-├── package.json          # Project metadata & dependencies
-├── .env.example          # Example environment variables
+├── index.js                 # Main server entry point
+├── package.json             # Project metadata & dependencies
+├── .env.example             # Example environment variables
+├── config/
+│   ├── db.js                # MongoDB connection setup
+│   └── schema.js            # Mongoose schema definitions
 ├── routes/
-│   └── users.js          # User routes (GET, POST, etc.)
+│   └── users.js             # User API routes (MongoDB queries)
+├── seeders/
+│   └── seedUsers.js         # Sample data for database
+└── BACKEND_SETUP.md         # This file
 ```
 
 ---
 
 ## Installation & Setup
 
-### Step 1: Create Server Folder
+### Step 1: Create Server Folder (if not done)
 
 ```bash
 mkdir server
@@ -56,19 +115,18 @@ cd server
 npm init -y
 ```
 
-This creates a `package.json` file with default settings. The `-y` flag skips interactive setup.
-
 ### Step 3: Install Dependencies
 
 ```bash
-npm install express cors
+npm install express cors mongoose
 ```
 
 This installs:
-- **express**: Web framework for building REST APIs
-- **cors**: Middleware to handle Cross-Origin Resource Sharing (allows frontend to talk to backend)
+- **express** (v4.19.2): Web framework for building REST APIs
+- **cors** (v2.8.5): Handle cross-origin requests (frontend ↔ backend)
+- **mongoose** (v8.x): MongoDB object modeling and validation
 
-Your `package.json` will now look like:
+Your `package.json` dependencies should look like:
 ```json
 {
   "name": "nexgencrm-server",
@@ -81,7 +139,8 @@ Your `package.json` will now look like:
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mongoose": "^8.x.x"
   }
 }
 ```
@@ -90,33 +149,26 @@ Your `package.json` will now look like:
 
 ## Environment Variables
 
-Environment variables store configuration settings like port numbers, database URLs, etc.
+### Create `.env.example` File
 
-### Step 1: Create `.env.example` File
-
-```bash
-touch .env.example
+```
+PORT=5500
+MONGODB_URI=mongodb://localhost:27017/nexgencrm
+NODE_ENV=development
 ```
 
-**File: `.env.example`**
+### Create `.env` File (for development)
+
 ```
-PORT=5000
-```
-
-This shows what environment variables are needed.
-
-### Step 2: Create `.env` File (Optional for Development)
-
-```bash
-touch .env
+PORT=5500
+MONGODB_URI=mongodb://localhost:27017/nexgencrm
+NODE_ENV=development
 ```
 
-**File: `.env`**
-```
-PORT=5000
-```
-
-> **Note**: In production, never commit `.env` to git. Add it to `.gitignore`.
+> **For MongoDB Atlas**, use:
+> ```
+> MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nexgencrm
+> ```
 
 ---
 
@@ -124,31 +176,405 @@ PORT=5000
 
 ### 1. **Express.js**
 - Lightweight Node.js web framework
-- Used to create HTTP servers and handle routes
-- Makes building REST APIs simple and fast
+- Handles HTTP requests and routes
+- Middleware for JSON parsing and error handling
+
+### 2. **CORS (Cross-Origin Resource Sharing)**
+- Allows frontend (localhost:3000) to communicate with backend (localhost:5500)
+- Without CORS, browsers block cross-domain requests
+
+### 3. **Mongoose**
+- MongoDB object modeling library
+- Provides schema validation and type casting
+- Simplifies database operations with methods like `find()`, `create()`, `updateMany()`
+- Auto-generates `_id` field (MongoDB ObjectId - 24-char hex string)
+
+**Why Mongoose vs Raw MongoDB?**
+| Feature | Raw MongoDB | Mongoose |
+|---------|------------|----------|
+| Schema | Flexible | Strict with validation |
+| Data Types | Any | Enforced types |
+| Queries | Native | Simplified methods |
+| Middleware | None | Pre/post hooks |
+| Timestamps | Manual | Auto-generated |
+
+---
+
+## Database Configuration
+
+### File: `config/db.js`
+
+```javascript
+import mongoose from "mongoose";
+
+// ========================
+// MONGODB CONNECTION
+// ========================
+
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/nexgencrm";
+    
+    // Connect to MongoDB
+    await mongoose.connect(mongoURI, {
+      // Connection options for better stability
+    });
+
+    console.log("✓ MongoDB connected successfully");
+  } catch (error) {
+    console.error("❌ MongoDB connection failed:", error.message);
+    process.exit(1); // Stop server if database connection fails
+  }
+};
+
+// Handle connection events
+mongoose.connection.on("disconnected", () => {
+  console.log("⚠️  MongoDB disconnected");
+});
+
+mongoose.connection.on("error", (error) => {
+  console.error("❌ MongoDB error:", error);
+});
+
+export default connectDB;
+```
+
+**How It Works:**
+- `mongoose.connect()`: Establishes connection to MongoDB
+- If connection fails, server exits with `process.exit(1)`
+- Connection events trigger console messages for debugging
+
+---
+
+## Schema Definition
+
+### File: `config/schema.js`
+
+```javascript
+import mongoose from "mongoose";
+
+// ========================
+// USER SCHEMA
+// ========================
+
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    },
+    mobile: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["Sales", "Marketing", "Operations", "Manager", "Admin"],
+      default: "Sales",
+    },
+    department: {
+      type: String,
+      trim: true,
+    },
+    designation: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other", ""],
+      default: "",
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    state: {
+      type: String,
+      trim: true,
+    },
+    country: {
+      type: String,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active",
+    },
+    profilePhoto: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true, // Auto-adds createdAt and updatedAt fields
+  }
+);
+
+// Create model from schema
+const User = mongoose.model("User", userSchema);
+
+export default User;
+```
+
+**Schema Field Options:**
+- `type`: Data type (String, Number, Date, Boolean, etc.)
+- `required`: Field must have a value
+- `unique`: No duplicate values allowed (MongoDB creates an index)
+- `default`: Default value if not provided
+- `enum`: Allowed values (dropdown options)
+- `trim`: Remove whitespace from strings
+- `lowercase`: Convert strings to lowercase
+- `match`: Regex validation (email pattern)
+
+**Timestamps:**
+- `createdAt`: Auto-set when document is created
+- `updatedAt`: Auto-updated whenever document changes
+
+---
+
+## API Routes
+
+### File: `routes/users.js`
 
 ```javascript
 import express from "express";
-const app = express();
+import User from "../config/schema.js";
+
+const router = express.Router();
+
+// ========================
+// GET - Fetch all users
+// ========================
+/**
+ * Route: GET /api/users
+ * Description: Retrieve all users from MongoDB
+ * Query Params: None
+ * Response: Array of user objects
+ * Status Code: 200 (Success), 500 (Server Error)
+ */
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// GET - Fetch single user by ID
+// ========================
+/**
+ * Route: GET /api/users/:id
+ * Description: Retrieve a specific user by MongoDB ObjectId
+ * Parameters:
+ *   - id: MongoDB ObjectId (24-char hex string)
+ * Response: User object or error message
+ * Status Code: 200 (Success), 400 (Invalid ID), 404 (Not Found), 500 (Server Error)
+ */
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    // CastError: Invalid MongoDB ObjectId format
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// POST - Create new user
+// ========================
+/**
+ * Route: POST /api/users
+ * Description: Create a new user in MongoDB
+ * Request Body:
+ *   {
+ *     "name": "string (required)",
+ *     "email": "string (required, unique)",
+ *     "mobile": "string (required)",
+ *     "role": "string (optional, default: 'Sales')",
+ *     "department": "string (optional)",
+ *     "designation": "string (optional)",
+ *     "dateOfBirth": "ISO Date string (optional)",
+ *     "gender": "string (optional)",
+ *     "address": "string (optional)",
+ *     "city": "string (optional)",
+ *     "state": "string (optional)",
+ *     "country": "string (optional)",
+ *     "status": "string (optional, default: 'Active')",
+ *     "profilePhoto": "string (optional)"
+ *   }
+ * Response: Created user object with MongoDB _id
+ * Status Code: 201 (Created), 400 (Validation Error), 500 (Server Error)
+ */
+router.post("/", async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      mobile,
+      role,
+      department,
+      designation,
+      dateOfBirth,
+      gender,
+      address,
+      city,
+      state,
+      country,
+      status,
+      profilePhoto,
+    } = req.body;
+
+    // Validation: Check required fields
+    if (!name || !email || !mobile) {
+      return res.status(400).json({
+        message: "name, email, and mobile are required",
+      });
+    }
+
+    // Create new user document
+    const newUser = new User({
+      name,
+      email,
+      mobile,
+      role: role || "Sales",
+      department,
+      designation,
+      dateOfBirth,
+      gender,
+      address,
+      city,
+      state,
+      country,
+      status: status || "Active",
+      profilePhoto,
+    });
+
+    // Save to MongoDB and get response with auto-generated _id
+    const savedUser = await newUser.save();
+
+    res.status(201).json(savedUser);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    // E11000: Duplicate key error (email already exists)
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// PUT - Update user
+// ========================
+/**
+ * Route: PUT /api/users/:id
+ * Description: Update an existing user
+ * Parameters:
+ *   - id: MongoDB ObjectId
+ * Request Body: Fields to update (partial update allowed)
+ * Response: Updated user object
+ * Status Code: 200 (Success), 400 (Invalid ID), 404 (Not Found), 500 (Server Error)
+ */
+router.put("/:id", async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true } // new: return updated doc, runValidators: apply schema validation
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// DELETE - Delete user
+// ========================
+/**
+ * Route: DELETE /api/users/:id
+ * Description: Delete a user from MongoDB
+ * Parameters:
+ *   - id: MongoDB ObjectId
+ * Response: Success message and deleted user data
+ * Status Code: 200 (Success), 400 (Invalid ID), 404 (Not Found), 500 (Server Error)
+ */
+router.delete("/:id", async (req, res) => {
+  try {
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully", user: deletedUser });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+export default router;
 ```
 
-### 2. **CORS (Cross-Origin Resource Sharing)**
-- Allows requests from different domains
-- Frontend (localhost:3000) can communicate with Backend (localhost:5000)
-- Without CORS, browsers block cross-domain requests
+**Mongoose Methods Used:**
+| Method | Purpose | Returns |
+|--------|---------|---------|
+| `User.find()` | Get all documents | Promise<Array> |
+| `User.findById(id)` | Get document by _id | Promise<Object\|null> |
+| `User.create(data)` | Create and save document | Promise<Object> |
+| `newUser.save()` | Save new document instance | Promise<Object> |
+| `User.findByIdAndUpdate()` | Update and return document | Promise<Object\|null> |
+| `User.findByIdAndDelete()` | Delete and return document | Promise<Object\|null> |
 
-```javascript
-import cors from "cors";
-app.use(cors());
-```
-
-### 3. **JSON Middleware**
-- Parses incoming request bodies as JSON
-- Allows the server to read POST request data
-
-```javascript
-app.use(express.json());
-```
+**Error Codes:**
+- `CastError`: Invalid ObjectId format (not 24-char hex string)
+- `E11000`: Duplicate key error (unique field already exists)
+- `ValidationError`: Schema validation failed
 
 ---
 
@@ -159,27 +585,22 @@ app.use(express.json());
 ```javascript
 import express from "express";
 import cors from "cors";
+import connectDB from "./config/db.js";
+import seedUsers from "./seeders/seedUsers.js";
 import usersRouter from "./routes/users.js";
 
-// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5500;
 
 // ========================
 // MIDDLEWARE
 // ========================
-
-// Enable CORS - allows frontend to make requests
-app.use(cors());
-
-// Parse JSON request bodies
-app.use(express.json());
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON bodies
 
 // ========================
 // BASIC ROUTE
 // ========================
-
-// Health check endpoint
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "NexGenCRM API" });
 });
@@ -187,17 +608,128 @@ app.get("/", (req, res) => {
 // ========================
 // API ROUTES
 // ========================
-
-// Mount user routes at /api/users
 app.use("/api/users", usersRouter);
 
 // ========================
-// START SERVER
+// DATABASE & SERVER STARTUP
 // ========================
+const startServer = async () => {
+  try {
+    console.log("\n🔄 Connecting to MongoDB...");
+    await connectDB();
+    console.log("✓ MongoDB connected!\n");
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+    console.log("🌱 Seeding database with sample data...");
+    await seedUsers();
+    console.log("✓ Database seeded!\n");
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`📝 API: http://localhost:${PORT}/api/users`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
+```
+
+---
+
+## Database Seeding
+
+### File: `seeders/seedUsers.js`
+
+```javascript
+import User from "../config/schema.js";
+
+const seedUsers = async () => {
+  try {
+    // Clear existing users (optional - remove for production)
+    await User.deleteMany({});
+
+    // Sample users data
+    const users = [
+      {
+        name: "John Doe",
+        email: "john@example.com",
+        mobile: "+1 555-888-3322",
+        role: "Admin",
+        department: "Operations",
+        designation: "Operations Manager",
+        gender: "Male",
+        city: "New York",
+        state: "NY",
+        country: "USA",
+        status: "Active",
+      },
+      {
+        name: "Jane Smith",
+        email: "jane@example.com",
+        mobile: "+1 555-123-7788",
+        role: "Sales",
+        department: "Sales",
+        designation: "Sales Executive",
+        gender: "Female",
+        city: "Los Angeles",
+        state: "CA",
+        country: "USA",
+        status: "Active",
+      },
+      {
+        name: "Robert Johnson",
+        email: "robert@example.com",
+        mobile: "+1 555-456-1234",
+        role: "Marketing",
+        department: "Marketing",
+        designation: "Marketing Manager",
+        gender: "Male",
+        city: "Chicago",
+        state: "IL",
+        country: "USA",
+        status: "Active",
+      },
+      {
+        name: "Emily Brown",
+        email: "emily@example.com",
+        mobile: "+1 555-789-5678",
+        role: "Sales",
+        department: "Sales",
+        designation: "Sales Representative",
+        gender: "Female",
+        city: "Houston",
+        state: "TX",
+        country: "USA",
+        status: "Active",
+      },
+      {
+        name: "Michael Davis",
+        email: "michael@example.com",
+        mobile: "+1 555-321-9876",
+        role: "Operations",
+        department: "Operations",
+        designation: "Operations Specialist",
+        gender: "Male",
+        city: "Phoenix",
+        state: "AZ",
+        country: "USA",
+        status: "Inactive",
+      },
+    ];
+
+    // Insert all users
+    const createdUsers = await User.insertMany(users);
+    console.log(`✓ Inserted ${createdUsers.length} sample users`);
+
+    return createdUsers;
+  } catch (error) {
+    console.error("Error seeding database:", error);
+  }
+};
+
+export default seedUsers;
 ```
 
 ### Explanation of Each Part:

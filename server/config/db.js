@@ -1,13 +1,13 @@
-import mysql from "mysql2/promise";
+import mongoose from "mongoose";
 
-const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "nexgencrm",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const connectDB = async () => {
+  try {
+    await mongoose.connect("mongodb://localhost:27017/nexgencrm");
+    console.log("✓ MongoDB connected successfully!");
+  } catch (error) {
+    console.error("MongoDB connection error:", error.message);
+    process.exit(1);
+  }
+};
 
-export default pool;
+export default connectDB;
