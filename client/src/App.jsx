@@ -37,6 +37,10 @@ let router = createBrowserRouter([
           element: <AddUser/>,
         },
         {
+          path: "/edit-user/:id",
+          element: <AddUser/>,
+        },
+        {
           path: "/leads",
           element: <Leads/>,
         },
