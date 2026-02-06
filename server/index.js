@@ -23,9 +23,9 @@ const startServer = async () => {
     await connectDB();
     console.log("✓ MongoDB connected!\n");
 
-    console.log("🌱 Seeding database with sample data...");
-    await seedUsers();
-    console.log("✓ Database seeded!\n");
+    // console.log("🌱 Seeding database with sample data...");
+    // await seedUsers();
+    // console.log("✓ Database seeded!\n");
 
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
