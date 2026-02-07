@@ -1,14 +1,18 @@
+import bcrypt from "bcryptjs";
 import User from "../config/schema.js";
 
 const seedUsers = async () => {
   try {
     console.log("Seeding users data...");
 
+    const hashedPassword = await bcrypt.hash("Admin@123", 10);
+
     const users = [
       {
-        name: "John Doe",
-        email: "john@example.com",
+        name: "Mitesh Prajapati",
+        email: "mitesh@nexgencrm.com",
         mobile: "+1 555-888-3322",
+        password: bcrypt.hashSync("Admin@123", 10),
         role: "Admin",
         department: "Operations",
         designation: "Operations Manager",
@@ -25,6 +29,7 @@ const seedUsers = async () => {
         name: "Jane Smith",
         email: "jane@example.com",
         mobile: "+1 555-123-7788",
+        password: hashedPassword,
         role: "Sales",
         department: "Sales",
         designation: "Sales Executive",
@@ -41,6 +46,7 @@ const seedUsers = async () => {
         name: "Mike Johnson",
         email: "mike@example.com",
         mobile: "+1 555-441-9090",
+        password: hashedPassword,
         role: "Manager",
         department: "Customer Success",
         designation: "CS Manager",
@@ -57,6 +63,7 @@ const seedUsers = async () => {
         name: "Sarah Williams",
         email: "sarah@example.com",
         mobile: "+1 555-009-1222",
+        password: hashedPassword,
         role: "Sales",
         department: "Sales",
         designation: "Sales Lead",
@@ -73,6 +80,7 @@ const seedUsers = async () => {
         name: "Robert Brown",
         email: "robert@example.com",
         mobile: "+1 555-555-5555",
+        password: hashedPassword,
         role: "Operations",
         department: "Operations",
         designation: "Operations Specialist",

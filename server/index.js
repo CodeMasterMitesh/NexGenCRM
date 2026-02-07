@@ -1,8 +1,13 @@
 import express from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.js";
+import authRouter from "./routes/auth.js";
 import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
+import auth from "./middleware/auth.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5500;
@@ -14,7 +19,8 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", message: "NexGenCRM API" });
 });
 
-app.use("/api/users", usersRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/users", auth, usersRouter);
 
 // Initialize database and start server
 const startServer = async () => {

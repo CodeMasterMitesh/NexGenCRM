@@ -1,4 +1,5 @@
 import express from "express";
+import bcrypt from "bcryptjs";
 import User from "../config/schema.js";
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password");
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -21,7 +22,7 @@ router.get("/", async (req, res) => {
 // ========================
 router.get("/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -46,6 +47,7 @@ router.post("/", async (req, res) => {
       name,
       email,
       mobile,
+      password,
       role,
       department,
       designation,
@@ -66,10 +68,13 @@ router.post("/", async (req, res) => {
       });
     }
 
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+
     const newUser = new User({
       name,
       email,
       mobile,
+      password: hashedPassword,
       role: role || "Sales",
       department,
       designation,
@@ -84,8 +89,10 @@ router.post("/", async (req, res) => {
     });
 
     const savedUser = await newUser.save();
+    const userResponse = savedUser.toObject();
+    delete userResponse.password;
 
-    res.status(201).json(savedUser);
+    res.status(201).json(userResponse);
   } catch (error) {
     console.error("Error creating user:", error);
     if (error.code === 11000) {

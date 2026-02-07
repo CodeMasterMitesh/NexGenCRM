@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Style.css";
+import { useAuth } from "./compenents/auth/AuthContext.jsx";
 // import { EventsBtn } from "./compenents/Events";
 // import {Greeting} from "./compenents/EventProps";
 import {EventPropagation} from "./compenents/EventPropagation";
 import { StateManagement } from "./compenents/StateManagement";
 const Users = () => {
     const navigate = useNavigate();
+    const { token } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -14,11 +16,14 @@ const Users = () => {
     const [deleting, setDeleting] = useState(false);
 
     const API_BASE_URL = "http://localhost:5500";
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE_URL}/api/users`);
+            const response = await fetch(`${API_BASE_URL}/api/users`, {
+                headers: authHeaders,
+            });
             if (!response.ok) {
                 throw new Error("Failed to load users");
             }
@@ -41,7 +46,7 @@ const Users = () => {
             setDeleting(true);
             const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json", ...authHeaders }
             });
 
             if (!response.ok) {

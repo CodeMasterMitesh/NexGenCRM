@@ -4,6 +4,8 @@ import Footer from "./compenents/Footer.jsx";
 import {LoginPage} from "./compenents/Login.jsx";
 import Layout from "./compenents/Layout.jsx";
 import "./compenents/Layout.css";
+import { AuthProvider } from "./compenents/auth/AuthContext.jsx";
+import ProtectedRoute from "./compenents/auth/ProtectedRoute.jsx";
 import Dashboard from "./Dashboard.jsx";
 import Users from "./Users.jsx";
 import AddUser from "./AddUser.jsx";
@@ -22,7 +24,15 @@ let router = createBrowserRouter([
       element: <LoginPage/>,
     },
     {
-      element: <Layout />,
+      path: "/login",
+      element: <LoginPage/>,
+    },
+    {
+      element: (
+        <ProtectedRoute>
+          <Layout />
+        </ProtectedRoute>
+      ),
       children: [
         {
           path: "/dashboard",
@@ -62,7 +72,9 @@ let router = createBrowserRouter([
 
 const App = () =>{
   return (
-   <RouterProvider router={router} />
+   <AuthProvider>
+     <RouterProvider router={router} />
+   </AuthProvider>
   )
 }
 

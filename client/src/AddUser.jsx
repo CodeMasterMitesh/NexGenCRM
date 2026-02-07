@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "./compenents/auth/AuthContext.jsx";
 import "./AddUser.css";
 
 // Add/Edit User page - handles both creating and editing users
@@ -7,6 +8,7 @@ const AddUser = () => {
     const navigate = useNavigate();
     const { id: userId } = useParams();
     const isEditMode = !!userId;
+    const { token } = useAuth();
 
     // State for form fields
     const [formData, setFormData] = useState({
@@ -30,6 +32,7 @@ const AddUser = () => {
     const [error, setError] = useState("");
 
     const API_BASE_URL = "http://localhost:5500";
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
     // Load user data if in edit mode
     useEffect(() => {
@@ -37,7 +40,9 @@ const AddUser = () => {
             const fetchUser = async () => {
                 try {
                     setLoading(true);
-                    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`);
+                    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                        headers: authHeaders,
+                    });
                     if (!response.ok) {
                         throw new Error("Failed to load user");
                     }
@@ -108,6 +113,7 @@ const AddUser = () => {
                 method,
                 headers: {
                     "Content-Type": "application/json",
+                    ...authHeaders,
                 },
                 body: JSON.stringify(payload),
             });
