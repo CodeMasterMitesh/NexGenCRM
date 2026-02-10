@@ -19,3 +19,13 @@ NexGenCRM is a cutting-edge Customer Relationship Management (CRM) software desi
 - **Mobile Access**: Access your CRM on the go with our mobile app, available for both iOS and Android devices. 
 - **Customizable Workflows**: Tailor the CRM to fit your business processes with customizable workflows and fields.
 - **Collaboration Tools**: Enhance team collaboration with shared calendars, notes, and communication channels.
+
+
+## Backend Mongodb Collections
+- **users**: Stores user information, including login credentials and profile details and associated users table but type == employee.
+- **users**: Contains customer contact information and mobile numbers and email and other details and associated users table but type == 'customer'.
+- **Users**: Manages sales pipeline data, including deal stages, values, and associated users table but type == lead.
+- **lead_followups**: Stores follow-up reminders, including reminder details and associated users table but type == lead.
+- **lead_sources**: Contains information about lead sources, including source names and associated lead_source table.
+- **email_templates**: Stores email templates for automated communication, including template content and associated email_templates.
+- **tasks**: Manages automated tasks, including task details and associated tasks.

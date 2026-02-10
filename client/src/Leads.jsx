@@ -1,53 +1,68 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Style.css";
+import { useAuth } from "./compenents/auth/AuthContext.jsx";
 
 const Leads = () => {
     const navigate = useNavigate();
+    const { token } = useAuth();
+    const [leads, setLeads] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
-    // Sample leads data
-    const leads = [
-        {
-            id: 1,
-            name: "John Doe",
-            email: "john@example.com",
-            mobile: "+1 555-102-3344",
-            company: "NovaTech",
-            source: "Facebook",
-            status: "New",
-            owner: "Alicia Patel",
-        },
-        {
-            id: 2,
-            name: "Jane Smith",
-            email: "jane@example.com",
-            mobile: "+1 555-221-5566",
-            company: "BrightOps",
-            source: "Website",
-            status: "Contacted",
-            owner: "Rahul Verma",
-        },
-        {
-            id: 3,
-            name: "Mike Johnson",
-            email: "mike@example.com",
-            mobile: "+1 555-889-1122",
-            company: "CloudBridge",
-            source: "Cold Call",
-            status: "Qualified",
-            owner: "Sarah Lee",
-        },
-        {
-            id: 4,
-            name: "Sarah Williams",
-            email: "sarah@example.com",
-            mobile: "+1 555-908-3333",
-            company: "MarketFlow",
-            source: "Referral",
-            status: "Converted",
-            owner: "Daniel Park",
-        },
-    ];
+    const API_BASE_URL = "http://localhost:5500";
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
+    const fetchLeads = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_BASE_URL}/api/leads`, {
+                headers: authHeaders,
+            });
+            if (!response.ok) {
+                throw new Error("Failed to load leads");
+            }
+            const data = await response.json();
+            setLeads(data);
+            setError("");
+        } catch (err) {
+            setError(err.message || "Unable to load leads");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLeads();
+    }, []);
+
+    const handleDelete = async (leadId, leadName) => {
+        try {
+            setDeleting(true);
+            const response = await fetch(`${API_BASE_URL}/api/leads/${leadId}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json", ...authHeaders }
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete lead");
+            }
+
+            setLeads(leads.filter(lead => lead._id !== leadId));
+            setDeleteConfirm(null);
+            setError("");
+        } catch (err) {
+            setError(err.message || "Failed to delete lead");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleEdit = (leadId) => {
+        navigate(`/edit-lead/${leadId}`);
+    };
     return (
         <div className="comman-page container-fluid py-4">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -71,23 +86,21 @@ const Leads = () => {
                             <th>Name</th>
                             <th>Email</th>
                             <th>Mobile</th>
-                            <th>Company</th>
                             <th>Source</th>
                             <th>Status</th>
-                            <th>Owner</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {leads.map(lead => (
-                            <tr key={lead.id}>
-                                <td>{lead.id}</td>
+                            <tr key={lead._id}>
+                                <td>{lead._id}</td>
                                 <td>{lead.name}</td>
                                 <td>{lead.email}</td>
                                 <td>{lead.mobile}</td>
-                                <td>{lead.company}</td>
+                                <td>{lead.leadSource}</td>
                                 <td>
-                                    <span className="badge text-bg-info">{lead.source}</span>
+                                    <span className="badge text-bg-info">{lead.status}</span>
                                 </td>
                                 <td>
                                     <span className="badge text-bg-primary">{lead.status}</span>
@@ -95,8 +108,8 @@ const Leads = () => {
                                 <td>{lead.owner}</td>
                                 <td>
                                     <div className="btn-group" role="group">
-                                        <button className="btn btn-sm btn-outline-primary">Edit</button>
-                                        <button className="btn btn-sm btn-outline-danger">Delete</button>
+                                        <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(lead._id)}>Edit</button>
+                                        <button className="btn btn-sm btn-outline-danger" onClick={() => setDeleteConfirm(lead)}>Delete</button>
                                     </div>
                                 </td>
                             </tr>

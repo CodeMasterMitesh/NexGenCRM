@@ -1,22 +1,63 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "./compenents/auth/AuthContext.jsx";
 import "./AddLead.css";
 
 const AddLead = () => {
-    const navigate = useNavigate();
+     const navigate = useNavigate();
+    const { id: userId } = useParams();
+    const isEditMode = !!userId;
+    const { token } = useAuth();
 
+    // State for form fields
     const [formData, setFormData] = useState({
-        fullName: "",
+        name: "",
         email: "",
         mobile: "",
-        company: "",
-        jobTitle: "",
-        source: "Website",
+        leadSource: "Website",
         status: "New",
-        owner: "",
         expectedValue: "",
         notes: "",
     });
+    const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(isEditMode);
+    const [error, setError] = useState("");
+
+    const API_BASE_URL = "http://localhost:5500";
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+    // Load user data if in edit mode
+    useEffect(() => {
+        if (isEditMode) {
+            const fetchUser = async () => {
+                try {
+                    setLoading(true);
+                    const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                        headers: authHeaders,
+                    });
+                    if (!response.ok) {
+                        throw new Error("Failed to load user");
+                    }
+                    const user = await response.json();
+                    setFormData({
+                        name: user.name || "",
+                        email: user.email || "",
+                        mobile: user.mobile || "",
+                        leadSource: user.leadSource || "Website",
+                        status: user.status || "New",
+                        expectedValue: user.expectedValue || "",
+                        notes: user.notes || "",
+                    });
+                    setError("");
+                } catch (err) {
+                    setError(err.message || "Failed to load user");
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchUser();
+        }
+    }, [isEditMode, userId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,18 +67,53 @@ const AddLead = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("New lead data:", formData);
-        alert("Lead added successfully!");
-        navigate("/leads");
+        try {
+            setSubmitting(true);
+            setError("");
+
+            const payload = {
+                name: formData.name,
+                email: formData.email,
+                mobile: formData.mobile,
+                leadSource: formData.leadSource,
+                status: formData.status,
+                expectedValue: formData.expectedValue,
+                notes: formData.notes,
+            };
+
+            const method = isEditMode ? "PUT" : "POST";
+            const url = isEditMode ? `${API_BASE_URL}/api/leads/${userId}` : `${API_BASE_URL}/api/leads`;
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...authHeaders,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.message || `Failed to ${isEditMode ? 'update' : 'add'} lead`);
+            }
+
+            alert(`Lead ${isEditMode ? 'updated' : 'added'} successfully!`);
+            navigate("/leads");
+        } catch (err) {
+            setError(err.message || `Unable to ${isEditMode ? 'update' : 'add'} lead`);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
         <div className="add-lead-page container-fluid py-4">
             <div className="form-header">
-                <h1 className="mb-1">Add New Lead</h1>
-                <p className="text-muted">Create a new lead record</p>
+                <h1 className="mb-1">{isEditMode ? "Edit Lead" : "Add New Lead"}</h1>
+                <p className="text-muted">{isEditMode ? "Update lead details" : "Create a new lead record"}</p>
             </div>
 
             <div className="form-container card border-0 shadow-sm">
@@ -45,14 +121,14 @@ const AddLead = () => {
                     <form onSubmit={handleSubmit} className="lead-form">
                         <div className="row g-4">
                             <div className="col-12 col-md-6 col-lg-4">
-                                <label htmlFor="fullName" className="form-label">Full Name</label>
+                                <label htmlFor="name" className="form-label">Full Name</label>
                                 <input
                                     type="text"
-                                    id="fullName"
-                                    name="fullName"
+                                    id="name"
+                                    name="name"
                                     className="form-control"
                                     placeholder="Enter lead full name"
-                                    value={formData.fullName}
+                                    value={formData.name}
                                     onChange={handleChange}
                                     required
                                 />
@@ -87,40 +163,12 @@ const AddLead = () => {
                             </div>
 
                             <div className="col-12 col-md-6 col-lg-4">
-                                <label htmlFor="company" className="form-label">Company</label>
-                                <input
-                                    type="text"
-                                    id="company"
-                                    name="company"
-                                    className="form-control"
-                                    placeholder="Enter company name"
-                                    value={formData.company}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <label htmlFor="jobTitle" className="form-label">Job Title</label>
-                                <input
-                                    type="text"
-                                    id="jobTitle"
-                                    name="jobTitle"
-                                    className="form-control"
-                                    placeholder="Enter job title"
-                                    value={formData.jobTitle}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <label htmlFor="source" className="form-label">Lead Source</label>
+                                <label htmlFor="leadSource" className="form-label">Lead Source</label>
                                 <select
-                                    id="source"
-                                    name="source"
+                                    id="leadSource"
+                                    name="leadSource"
                                     className="form-select"
-                                    value={formData.source}
+                                    value={formData.leadSource}
                                     onChange={handleChange}
                                     required
                                 >
@@ -149,7 +197,7 @@ const AddLead = () => {
                                     <option value="Lost">Lost</option>
                                 </select>
                             </div>
-
+{/* 
                             <div className="col-12 col-md-6 col-lg-4">
                                 <label htmlFor="owner" className="form-label">Lead Owner</label>
                                 <input
@@ -162,7 +210,7 @@ const AddLead = () => {
                                     onChange={handleChange}
                                     required
                                 />
-                            </div>
+                            </div> */}
 
                             <div className="col-12 col-md-6 col-lg-4">
                                 <label htmlFor="expectedValue" className="form-label">Expected Value (₹)</label>

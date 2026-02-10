@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.js";
+import leadsRouter from "./routes/leads.js";
 import authRouter from "./routes/auth.js";
 import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", auth, usersRouter);
+app.use("/api/leads", auth, leadsRouter);
 
 // Initialize database and start server
 const startServer = async () => {
@@ -36,6 +38,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`📝 API: http://localhost:${PORT}/api/users`);
+      console.log(`📝 API: http://localhost:${PORT}/api/leads`);
     });
   } catch (error) {
     console.error("❌ Failed to start server:", error);

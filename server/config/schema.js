@@ -22,6 +22,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      required: false,
+    },
+    expectedValue: {
+      type: Number,
+      default: 0,
+    },
+    leadSource: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
       default: "Sales",
@@ -62,7 +74,11 @@ const userSchema = new mongoose.Schema(
     status: {
       type: String,
       default: "Active",
-      enum: ["Active", "Inactive"],
+      enum: ["Active", "Inactive","Contacted","Qualified","Unqualified","Converted","Lost"],
+    },
+    notes: {
+      type: String,
+      default: "",
     },
     profilePhoto: {
       type: String,
