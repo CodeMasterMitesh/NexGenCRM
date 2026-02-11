@@ -53,6 +53,7 @@ const NavLinks = () => {
             <Links link="/dashboard" name="Dashboard" />
             <Links link="/users" name="Users" />
             <Links link="/leads" name="Leads" />
+            <Links link="/tasks" name="Tasks" />
             <Links link="/lead-source" name="Lead Sources" />
             <Links link="/customers" name="Customers" />
             <Links link="/reports" name="Reports" />

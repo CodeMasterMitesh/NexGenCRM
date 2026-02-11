@@ -34,6 +34,7 @@ const AddLead = () => {
     const [loading, setLoading] = useState(isEditMode);
     const [error, setError] = useState("");
     const [employees, setEmployees] = useState([]);
+    const [leadSources, setLeadSources] = useState([]);
 
     const API_BASE_URL = "http://localhost:5500";
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
@@ -51,6 +52,26 @@ const AddLead = () => {
             setEmployees(staff);
         } catch {
             setEmployees([]);
+        }
+    };
+
+    const fetchLeadSources = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/lead-sources`, {
+                headers: authHeaders,
+            });
+            if (!response.ok) {
+                throw new Error("Failed to load lead sources");
+            }
+            const data = await response.json();
+            setLeadSources(data);
+            setFormData((prev) => {
+                if (prev.leadSource) return prev;
+                if (!data || data.length === 0) return prev;
+                return { ...prev, leadSource: data[0].name };
+            });
+        } catch {
+            setLeadSources([]);
         }
     };
 
@@ -100,6 +121,7 @@ const AddLead = () => {
 
     useEffect(() => {
         fetchEmployees();
+        fetchLeadSources();
     }, []);
 
     useEffect(() => {
@@ -281,11 +303,21 @@ const AddLead = () => {
                                     onChange={handleChange}
                                     required
                                 >
-                                    <option value="Website">Website</option>
-                                    <option value="Facebook">Facebook</option>
-                                    <option value="Referral">Referral</option>
-                                    <option value="Cold Call">Cold Call</option>
-                                    <option value="Event">Event</option>
+                                    {leadSources.length === 0 ? (
+                                        <>
+                                            <option value="Website">Website</option>
+                                            <option value="Facebook">Facebook</option>
+                                            <option value="Referral">Referral</option>
+                                            <option value="Cold Call">Cold Call</option>
+                                            <option value="Event">Event</option>
+                                        </>
+                                    ) : (
+                                        leadSources.map((source) => (
+                                            <option key={source._id} value={source.name}>
+                                                {source.name}
+                                            </option>
+                                        ))
+                                    )}
                                 </select>
                             </div>
 

@@ -3,6 +3,10 @@ import cors from "cors";
 import usersRouter from "./routes/users.js";
 import leadsRouter from "./routes/leads.js";
 import authRouter from "./routes/auth.js";
+import tasksRouter from "./routes/tasks.js";
+import dashboardRouter from "./routes/dashboard.js";
+import customersRouter from "./routes/customers.js";
+import leadSourcesRouter from "./routes/leadSources.js";
 import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
 import auth from "./middleware/auth.js";
@@ -23,6 +27,10 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", auth, usersRouter);
 app.use("/api/leads", auth, leadsRouter);
+app.use("/api/tasks", auth, tasksRouter);
+app.use("/api/dashboard", auth, dashboardRouter);
+app.use("/api/customers", auth, customersRouter);
+app.use("/api/lead-sources", auth, leadSourcesRouter);
 
 // Initialize database and start server
 const startServer = async () => {

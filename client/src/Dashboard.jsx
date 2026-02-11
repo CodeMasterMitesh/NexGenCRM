@@ -8,6 +8,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [followupSummary, setFollowupSummary] = useState({ todayFollowups: [], overdueFollowups: [], upcomingFollowups: [] });
+    const [stats, setStats] = useState({ totalCustomers: 0, activeLeads: 0, totalSales: 0, pendingTasks: 0 });
     const [loading, setLoading] = useState(true);
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -30,6 +31,27 @@ const Dashboard = () => {
         fetchFollowupSummary();
     }, []);
 
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const response = await fetch("http://localhost:5500/api/dashboard/summary", {
+                    headers: authHeaders,
+                });
+                if (!response.ok) throw new Error("Failed to load dashboard summary");
+                const data = await response.json();
+                setStats({
+                    totalCustomers: data.totalCustomers || 0,
+                    activeLeads: data.activeLeads || 0,
+                    totalSales: data.totalSales || 0,
+                    pendingTasks: data.pendingTasks || 0,
+                });
+            } catch {
+                setStats({ totalCustomers: 0, activeLeads: 0, totalSales: 0, pendingTasks: 0 });
+            }
+        };
+        fetchSummary();
+    }, [token]);
+
     return (
         <div className="dashboard container-fluid py-4">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -41,18 +63,19 @@ const Dashboard = () => {
 
             <div className="row g-4 mb-4">
                 <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Total Customers" value="1,238" icon="👥" color="#667eea" />
+                    <StatsCard title="Total Customers" value={stats.totalCustomers} icon="👥" color="#667eea" />
                 </div>
                 <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Active Leads" value="567" icon="🎯" color="#f093fb" />
+                    <StatsCard title="Active Leads" value={stats.activeLeads} icon="🎯" color="#f093fb" />
                 </div>
                 <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Total Sales" value="₹89,450" icon="💰" color="#4facfe" />
+                    <StatsCard title="Total Sales" value={`₹${stats.totalSales.toLocaleString()}`} icon="💰" color="#4facfe" />
                 </div>
                 <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Pending Tasks" value="23" icon="📋" color="#fa709a" />
+                    <StatsCard title="Pending Tasks" value={stats.pendingTasks} icon="📋" color="#fa709a" />
                 </div>
             </div>
+
 
             <div className="row g-4">
                 <div className="col-12 col-lg-4">

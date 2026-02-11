@@ -1,0 +1,8 @@
+:root {
+    --tasks-bg: #f5f6f9;
+    --tasks-accent: #253b6e;
+}
+
+.tasks-page .page-title {
+    color: var(--tasks-accent);
+}

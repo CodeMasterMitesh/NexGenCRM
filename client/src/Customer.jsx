@@ -1,13 +1,51 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "./compenents/auth/AuthContext.jsx";
 import "./Style.css";
 
 const Customers = () => {
-    // Sample customers data
-    const customers = [
-        { id: 1, name: "John Doe", email: "john@example.com", source: "Facebook" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", source: "Website" },
-        { id: 3, name: "Mike Johnson", email: "mike@example.com", source: "Cold Call" },
-        { id: 4, name: "Sarah Williams", email: "sarah@example.com", source: "Referral" },
-    ];
+    const navigate = useNavigate();
+    const { token } = useAuth();
+    const [customers, setCustomers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const API_BASE_URL = "http://localhost:5500";
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const fetchCustomers = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_BASE_URL}/api/customers`, { headers: authHeaders });
+            if (!response.ok) throw new Error("Failed to load customers");
+            const data = await response.json();
+            setCustomers(data);
+            setError("");
+        } catch (err) {
+            setError(err.message || "Unable to load customers");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCustomers();
+    }, []);
+
+    const handleDelete = async (customerId) => {
+        const ok = window.confirm("Delete this customer?");
+        if (!ok) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+                method: "DELETE",
+                headers: authHeaders,
+            });
+            if (!response.ok) throw new Error("Failed to delete customer");
+            fetchCustomers();
+        } catch (err) {
+            setError(err.message || "Unable to delete customer");
+        }
+    };
 
     return (
         <div className="comman-page container-fluid py-4">
@@ -16,8 +54,10 @@ const Customers = () => {
                     <h1 className="page-title mb-1">Customers Management</h1>
                     <p className="text-muted mb-0">Maintain your customer directory</p>
                 </div>
-                <button className="btn btn-primary">+ Add Customer</button>
+                <button className="btn btn-primary" onClick={() => navigate("/add-customer")}>+ Add Customer</button>
             </div>
+
+            {error && <div className="alert alert-danger">{error}</div>}
             
             {/* Customers table */}
             <div className="card border-0 shadow-sm table-card">
@@ -34,22 +74,32 @@ const Customers = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {customers.map(customer => (
-                            <tr key={customer.id}>
-                                <td>{customer.id}</td>
-                                <td>{customer.name}</td>
-                                <td>{customer.email}</td>
-                                <td>
-                                    <span className="badge text-bg-info">{customer.source}</span>
-                                </td>
-                                <td>
-                                    <div className="btn-group" role="group">
-                                        <button className="btn btn-sm btn-outline-primary">Edit</button>
-                                        <button className="btn btn-sm btn-outline-danger">Delete</button>
-                                    </div>
-                                </td>
+                        {loading ? (
+                            <tr>
+                                <td colSpan={5} className="text-center text-muted py-4">Loading customers...</td>
                             </tr>
-                        ))}
+                        ) : customers.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="text-center text-muted py-4">No customers found.</td>
+                            </tr>
+                        ) : (
+                            customers.map(customer => (
+                                <tr key={customer._id}>
+                                    <td>{customer._id}</td>
+                                    <td>{customer.name}</td>
+                                    <td>{customer.email}</td>
+                                    <td>
+                                        <span className="badge text-bg-info">{customer.leadSource || "-"}</span>
+                                    </td>
+                                    <td>
+                                        <div className="btn-group" role="group">
+                                            <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/edit-customer/${customer._id}`)}>Edit</button>
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(customer._id)}>Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                         </table>
                     </div>

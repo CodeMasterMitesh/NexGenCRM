@@ -14,6 +14,9 @@ import AddLead from "./AddLead.jsx";
 import LeadFollowup from "./LeadFollowup.jsx";
 import Customers from "./Customer.jsx";
 import LeadSource from "./LeadsSource.jsx";
+import Tasks from "./Tasks.jsx";
+import AddCustomer from "./AddCustomer.jsx";
+import AddLeadSource from "./AddLeadSource.jsx";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -72,8 +75,28 @@ let router = createBrowserRouter([
           element: <Customers/>,
         },
         {
+          path: "/add-customer",
+          element: <AddCustomer/>,
+        },
+        {
+          path: "/edit-customer/:id",
+          element: <AddCustomer/>,
+        },
+        {
           path: "/lead-source",
           element: <LeadSource/>,
+        },
+        {
+          path: "/add-lead-source",
+          element: <AddLeadSource/>,
+        },
+        {
+          path: "/edit-lead-source/:id",
+          element: <AddLeadSource/>,
+        },
+        {
+          path: "/tasks",
+          element: <Tasks/>,
         },
       ],
     },
