@@ -11,6 +11,7 @@ import Users from "./Users.jsx";
 import AddUser from "./AddUser.jsx";
 import Leads from "./Leads.jsx";
 import AddLead from "./AddLead.jsx";
+import LeadFollowup from "./LeadFollowup.jsx";
 import Customers from "./Customer.jsx";
 import LeadSource from "./LeadsSource.jsx";
 import {
@@ -57,6 +58,14 @@ let router = createBrowserRouter([
         {
           path: "/add-lead",
           element: <AddLead/>,
+        },
+        {
+          path: "/edit-lead/:id",
+          element: <AddLead/>,
+        },
+        {
+          path: "/lead-followup/:id",
+          element: <LeadFollowup/>,
         },
         {
           path: "/customers",
