@@ -19,7 +19,11 @@ const Customers = () => {
             const response = await fetch(`${API_BASE_URL}/api/customers`, { headers: authHeaders });
             if (!response.ok) throw new Error("Failed to load customers");
             const data = await response.json();
-            setCustomers(data);
+            const filteredCustomers = (data || []).filter((item) => {
+                const type = (item.type || "").toLowerCase();
+                return type === "customer" || type === "";
+            });
+            setCustomers(filteredCustomers);
             setError("");
         } catch (err) {
             setError(err.message || "Unable to load customers");
@@ -95,6 +99,12 @@ const Customers = () => {
                                         <div className="btn-group" role="group">
                                             <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/edit-customer/${customer._id}`)}>Edit</button>
                                             <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(customer._id)}>Delete</button>
+                                            <button
+                                                className="btn btn-sm btn-outline-secondary"
+                                                onClick={() => navigate(`/add-inquiry?sourceType=customer&sourceId=${customer._id}`)}
+                                            >
+                                                Inquiry
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

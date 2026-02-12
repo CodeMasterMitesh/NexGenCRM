@@ -17,6 +17,15 @@ import LeadSource from "./LeadsSource.jsx";
 import Tasks from "./Tasks.jsx";
 import AddCustomer from "./AddCustomer.jsx";
 import AddLeadSource from "./AddLeadSource.jsx";
+import Products from "./Products.jsx";
+import AddProduct from "./AddProduct.jsx";
+import Inquiries from "./Inquiries.jsx";
+import AddInquiry from "./AddInquiry.jsx";
+import InquiryFollowup from "./InquiryFollowup.jsx";
+import Quotations from "./Quotations.jsx";
+import AddQuotation from "./AddQuotation.jsx";
+import ProformaInvoices from "./ProformaInvoices.jsx";
+import AddProformaInvoice from "./AddProformaInvoice.jsx";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -97,6 +106,58 @@ let router = createBrowserRouter([
         {
           path: "/tasks",
           element: <Tasks/>,
+        },
+        {
+          path: "/products",
+          element: <Products/>,
+        },
+        {
+          path: "/add-product",
+          element: <AddProduct/>,
+        },
+        {
+          path: "/edit-product/:id",
+          element: <AddProduct/>,
+        },
+        {
+          path: "/inquiries",
+          element: <Inquiries/>,
+        },
+        {
+          path: "/add-inquiry",
+          element: <AddInquiry/>,
+        },
+        {
+          path: "/edit-inquiry/:id",
+          element: <AddInquiry/>,
+        },
+        {
+          path: "/inquiry-followup/:id",
+          element: <InquiryFollowup/>,
+        },
+        {
+          path: "/quotations",
+          element: <Quotations/>,
+        },
+        {
+          path: "/add-quotation",
+          element: <AddQuotation/>,
+        },
+        {
+          path: "/edit-quotation/:id",
+          element: <AddQuotation/>,
+        },
+        {
+          path: "/proforma-invoices",
+          element: <ProformaInvoices/>,
+        },
+        {
+          path: "/add-proforma-invoice",
+          element: <AddProformaInvoice/>,
+        },
+        {
+          path: "/edit-proforma-invoice/:id",
+          element: <AddProformaInvoice/>,
         },
       ],
     },

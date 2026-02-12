@@ -6,11 +6,14 @@ import { useAuth } from "./compenents/auth/AuthContext.jsx";
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [followupSummary, setFollowupSummary] = useState({ todayFollowups: [], overdueFollowups: [], upcomingFollowups: [] });
     const [stats, setStats] = useState({ totalCustomers: 0, activeLeads: 0, totalSales: 0, pendingTasks: 0 });
     const [loading, setLoading] = useState(true);
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    const isAdmin = user?.role === "Admin";
+    const userId = user?.id;
+    const userName = user?.name;
 
     useEffect(() => {
         const fetchFollowupSummary = async () => {
@@ -21,7 +24,18 @@ const Dashboard = () => {
                 });
                 if (!response.ok) throw new Error("Failed to load followup summary");
                 const data = await response.json();
-                setFollowupSummary(data);
+                const filterFollowups = (items) => {
+                    if (isAdmin) return items;
+                    return (items || []).filter((item) => {
+                        const assigned = item.lead?.assignedTo || item.followUp?.assignTo;
+                        return assigned === userId || assigned === userName;
+                    });
+                };
+                setFollowupSummary({
+                    todayFollowups: filterFollowups(data.todayFollowups),
+                    overdueFollowups: filterFollowups(data.overdueFollowups),
+                    upcomingFollowups: filterFollowups(data.upcomingFollowups),
+                });
             } catch (err) {
                 setFollowupSummary({ todayFollowups: [], overdueFollowups: [], upcomingFollowups: [] });
             } finally {
@@ -29,7 +43,7 @@ const Dashboard = () => {
             }
         };
         fetchFollowupSummary();
-    }, []);
+    }, [token, userId, userName, isAdmin]);
 
     useEffect(() => {
         const fetchSummary = async () => {

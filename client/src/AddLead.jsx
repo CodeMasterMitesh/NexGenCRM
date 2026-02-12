@@ -29,12 +29,14 @@ const AddLead = () => {
         city: "",
         state: "",
         country: "",
+        interestedProduct: "",
     });
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(isEditMode);
     const [error, setError] = useState("");
     const [employees, setEmployees] = useState([]);
     const [leadSources, setLeadSources] = useState([]);
+    const [products, setProducts] = useState([]);
 
     const API_BASE_URL = "http://localhost:5500";
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
@@ -48,7 +50,7 @@ const AddLead = () => {
                 throw new Error("Failed to load employees");
             }
             const data = await response.json();
-            const staff = (data || []).filter((item) => item.type !== "Lead");
+            const staff = (data || []).filter((item) => (item.type || "").toLowerCase() !== "lead");
             setEmployees(staff);
         } catch {
             setEmployees([]);
@@ -72,6 +74,21 @@ const AddLead = () => {
             });
         } catch {
             setLeadSources([]);
+        }
+    };
+
+    const fetchProducts = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/products`, {
+                headers: authHeaders,
+            });
+            if (!response.ok) {
+                throw new Error("Failed to load products");
+            }
+            const data = await response.json();
+            setProducts(data);
+        } catch {
+            setProducts([]);
         }
     };
 
@@ -107,6 +124,7 @@ const AddLead = () => {
                         city: user.city || "",
                         state: user.state || "",
                         country: user.country || "",
+                        interestedProduct: user.interestedProduct || "",
                     });
                     setError("");
                 } catch (err) {
@@ -122,6 +140,7 @@ const AddLead = () => {
     useEffect(() => {
         fetchEmployees();
         fetchLeadSources();
+        fetchProducts();
     }, []);
 
     useEffect(() => {
@@ -166,6 +185,7 @@ const AddLead = () => {
                 city: formData.city,
                 state: formData.state,
                 country: formData.country,
+                interestedProduct: formData.interestedProduct,
             };
 
             const method = isEditMode ? "PUT" : "POST";
@@ -395,6 +415,24 @@ const AddLead = () => {
                                     min="0"
                                     required
                                 />
+                            </div>
+
+                            <div className="col-12 col-md-6 col-lg-4">
+                                <label htmlFor="interestedProduct" className="form-label">Interested Product</label>
+                                <select
+                                    id="interestedProduct"
+                                    name="interestedProduct"
+                                    className="form-select"
+                                    value={formData.interestedProduct}
+                                    onChange={handleChange}
+                                >
+                                    <option value="">Select product</option>
+                                    {products.map((product) => (
+                                        <option key={product._id} value={product._id}>
+                                            {product.name} ({product.vehicleType || "Any"})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="col-12 col-md-6 col-lg-4">

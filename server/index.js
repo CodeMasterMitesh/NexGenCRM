@@ -7,6 +7,10 @@ import tasksRouter from "./routes/tasks.js";
 import dashboardRouter from "./routes/dashboard.js";
 import customersRouter from "./routes/customers.js";
 import leadSourcesRouter from "./routes/leadSources.js";
+import productsRouter from "./routes/products.js";
+import inquiriesRouter from "./routes/inquiries.js";
+import quotationsRouter from "./routes/quotations.js";
+import proformaInvoicesRouter from "./routes/proformaInvoices.js";
 import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
 import auth from "./middleware/auth.js";
@@ -31,6 +35,10 @@ app.use("/api/tasks", auth, tasksRouter);
 app.use("/api/dashboard", auth, dashboardRouter);
 app.use("/api/customers", auth, customersRouter);
 app.use("/api/lead-sources", auth, leadSourcesRouter);
+app.use("/api/products", auth, productsRouter);
+app.use("/api/inquiries", auth, inquiriesRouter);
+app.use("/api/quotations", auth, quotationsRouter);
+app.use("/api/proforma-invoices", auth, proformaInvoicesRouter);
 
 // Initialize database and start server
 const startServer = async () => {

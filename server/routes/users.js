@@ -9,7 +9,9 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find({
+      type: { $in: [null, "", "users", "user", "User", "Users"] },
+    }).select("-password");
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -75,6 +77,7 @@ router.post("/", async (req, res) => {
       email,
       mobile,
       password: hashedPassword,
+      type: "users",
       role: role || "Sales",
       department,
       designation,
@@ -107,9 +110,16 @@ router.post("/", async (req, res) => {
 // ========================
 router.put("/:id", async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    if (typeof updateData.password === "string" && updateData.password.trim()) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    } else {
+      delete updateData.password;
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 

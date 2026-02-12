@@ -5,7 +5,7 @@ import { useAuth } from "./compenents/auth/AuthContext.jsx";
 
 const Leads = () => {
     const navigate = useNavigate();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -18,6 +18,9 @@ const Leads = () => {
 
     const API_BASE_URL = "http://localhost:5500";
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    const isAdmin = user?.role === "Admin";
+    const userId = user?.id;
+    const userName = user?.name;
 
     const fetchEmployees = async () => {
         try {
@@ -28,7 +31,7 @@ const Leads = () => {
                 throw new Error("Failed to load employees");
             }
             const data = await response.json();
-            const staff = (data || []).filter((item) => item.type !== "Lead");
+            const staff = (data || []).filter((item) => (item.type || "").toLowerCase() !== "lead");
             setEmployees(staff);
         } catch {
             setEmployees([]);
@@ -45,7 +48,12 @@ const Leads = () => {
                 throw new Error("Failed to load leads");
             }
             const data = await response.json();
-            setLeads(data);
+            const filteredLeads = isAdmin
+                ? data
+                : (data || []).filter(
+                    (lead) => lead.assignedTo === userId || lead.assignedTo === userName
+                );
+            setLeads(filteredLeads);
             setError("");
         } catch (err) {
             setError(err.message || "Unable to load leads");
@@ -57,7 +65,7 @@ const Leads = () => {
     useEffect(() => {
         fetchLeads();
         fetchEmployees();
-    }, []);
+    }, [token, userId, userName, isAdmin]);
 
     const filteredLeads = leads.filter((lead) => {
         const matchesSearch = searchTerm
@@ -193,6 +201,12 @@ const Leads = () => {
                                         <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(lead._id)}>Edit</button>
                                         <button className="btn btn-sm btn-outline-danger" onClick={() => setDeleteConfirm(lead)}>Delete</button>
                                         <button className="btn btn-sm btn-outline-success" onClick={() => handleFollowup(lead._id)}>Followup</button>
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => navigate(`/add-inquiry?sourceType=lead&sourceId=${lead._id}`)}
+                                        >
+                                            Inquiry
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

@@ -15,6 +15,7 @@ const AddUser = () => {
         name: "",
         email: "",
         mobile: "",
+        password: "",
         role: "Sales",
         department: "",
         designation: "",
@@ -51,6 +52,7 @@ const AddUser = () => {
                         name: user.name || "",
                         email: user.email || "",
                         mobile: user.mobile || "",
+                        password: "",
                         role: user.role || "Sales",
                         department: user.department || "",
                         designation: user.designation || "",
@@ -105,6 +107,10 @@ const AddUser = () => {
                 country: formData.country,
                 status: formData.status,
             };
+
+            if (formData.password) {
+                payload.password = formData.password;
+            }
 
             const method = isEditMode ? "PUT" : "POST";
             const url = isEditMode ? `${API_BASE_URL}/api/users/${userId}` : `${API_BASE_URL}/api/users`;
@@ -184,6 +190,25 @@ const AddUser = () => {
                                         disabled={isEditMode}
                                         required
                                     />
+                                </div>
+
+                                <div className="col-12 col-md-6 col-lg-4">
+                                    <label htmlFor="password" className="form-label">
+                                        {isEditMode ? "New Password" : "Password"}
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        className="form-control"
+                                        placeholder={isEditMode ? "Leave blank to keep current" : "Enter a password"}
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required={!isEditMode}
+                                    />
+                                    {isEditMode && (
+                                        <small className="text-muted">Leave blank to keep current password.</small>
+                                    )}
                                 </div>
 
                                 <div className="col-12 col-md-6 col-lg-4">

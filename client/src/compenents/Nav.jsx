@@ -53,9 +53,13 @@ const NavLinks = () => {
             <Links link="/dashboard" name="Dashboard" />
             <Links link="/users" name="Users" />
             <Links link="/leads" name="Leads" />
+            <Links link="/inquiries" name="Inquiries" />
+            <Links link="/quotations" name="Quotations" />
+            <Links link="/proforma-invoices" name="Proforma" />
             <Links link="/tasks" name="Tasks" />
             <Links link="/lead-source" name="Lead Sources" />
             <Links link="/customers" name="Customers" />
+            <Links link="/products" name="Products" />
             <Links link="/reports" name="Reports" />
         </ul>
     )

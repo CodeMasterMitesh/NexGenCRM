@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "./compenents/auth/AuthContext.jsx";
 import "./Style.css";
 
@@ -19,6 +19,9 @@ const Tasks = () => {
 
     const API_BASE_URL = "http://localhost:5500";
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    const isAdmin = user?.role === "Admin";
+    const userId = user?.id;
+    const userName = user?.name;
 
     const fetchTasks = async () => {
         try {
@@ -26,7 +29,12 @@ const Tasks = () => {
             const response = await fetch(`${API_BASE_URL}/api/tasks`, { headers: authHeaders });
             if (!response.ok) throw new Error("Failed to load tasks");
             const data = await response.json();
-            setTasks(data);
+            const filteredTasks = isAdmin
+                ? data
+                : (data || []).filter(
+                    (task) => task.assignedTo === userId || task.assignedTo === userName
+                );
+            setTasks(filteredTasks);
             setError("");
         } catch (err) {
             setError(err.message || "Unable to load tasks");
@@ -40,7 +48,7 @@ const Tasks = () => {
             const response = await fetch(`${API_BASE_URL}/api/users`, { headers: authHeaders });
             if (!response.ok) throw new Error("Failed to load employees");
             const data = await response.json();
-            const staff = (data || []).filter((item) => item.type !== "Lead");
+            const staff = (data || []).filter((item) => (item.type || "").toLowerCase() !== "lead");
             setEmployees(staff);
         } catch {
             setEmployees([]);
@@ -50,7 +58,14 @@ const Tasks = () => {
     useEffect(() => {
         fetchTasks();
         fetchEmployees();
-    }, []);
+    }, [token, userId, userName, isAdmin]);
+
+    const employeeById = useMemo(() => {
+        return employees.reduce((acc, employee) => {
+            acc[employee._id] = employee;
+            return acc;
+        }, {});
+    }, [employees]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -62,6 +77,7 @@ const Tasks = () => {
         try {
             const payload = {
                 ...formData,
+                assignedTo: formData.assignedTo || "",
                 createdBy: user?.name || "",
                 dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
             };
@@ -152,7 +168,7 @@ const Tasks = () => {
                             >
                                 <option value="">Select employee</option>
                                 {employees.map((employee) => (
-                                    <option key={employee._id} value={employee.name}>
+                                    <option key={employee._id} value={employee._id}>
                                         {employee.name}
                                     </option>
                                 ))}
@@ -241,7 +257,7 @@ const Tasks = () => {
                                                     <strong>{task.title}</strong>
                                                     {task.description && <div className="text-muted small">{task.description}</div>}
                                                 </td>
-                                                <td>{task.assignedTo || "-"}</td>
+                                                <td>{employeeById[task.assignedTo]?.name || task.assignedTo || "-"}</td>
                                                 <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-"}</td>
                                                 <td>{task.priority || "-"}</td>
                                                 <td>

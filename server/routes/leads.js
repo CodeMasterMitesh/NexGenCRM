@@ -9,7 +9,17 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const leads = await User.find({ type: "Lead" });
+    const isAdmin = req.user?.role === "Admin";
+    const userId = req.user?.sub;
+    const userName = req.user?.name;
+    const filter = isAdmin
+      ? { type: { $in: ["lead", "Lead"] } }
+      : {
+          type: { $in: ["lead", "Lead"] },
+          $or: [{ assignedTo: userId }, { assignedTo: userName }],
+        };
+
+    const leads = await User.find(filter);
     // console.log("Leads fetched:", leads);
     res.json(leads);
   } catch (error) {
@@ -28,7 +38,17 @@ router.get("/dashboard/followups/summary", async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const leads = await User.find({ type: "Lead" });
+    const isAdmin = req.user?.role === "Admin";
+    const userId = req.user?.sub;
+    const userName = req.user?.name;
+    const filter = isAdmin
+      ? { type: { $in: ["lead", "Lead"] } }
+      : {
+          type: { $in: ["lead", "Lead"] },
+          $or: [{ assignedTo: userId }, { assignedTo: userName }],
+        };
+
+    const leads = await User.find(filter);
     const todayFollowups = [];
     const overdueFollowups = [];
     const upcomingFollowups = [];
@@ -130,7 +150,7 @@ router.post("/", async (req, res) => {
       city,
       state,
       country,
-      type: "Lead",
+      type: "lead",
     });
 
     const savedLead = await newUser.save();

@@ -43,6 +43,7 @@ router.post("/register", async (req, res) => {
       email: email.toLowerCase(),
       mobile: mobile || "",
       password: hashedPassword,
+      type: "users",
       role: "Admin",
       status: "Active",
     });

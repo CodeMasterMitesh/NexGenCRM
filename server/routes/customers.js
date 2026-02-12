@@ -8,7 +8,7 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const customers = await User.find({ type: "Customer" }).select("-password");
+    const customers = await User.find({ type: { $in: ["customer", "Customer"] } }).select("-password");
     res.json(customers);
   } catch (error) {
     console.error("Error fetching customers:", error);
@@ -21,7 +21,7 @@ router.get("/", async (req, res) => {
 // ========================
 router.get("/:id", async (req, res) => {
   try {
-    const customer = await User.findOne({ _id: req.params.id, type: "Customer" }).select("-password");
+    const customer = await User.findOne({ _id: req.params.id, type: { $in: ["customer", "Customer"] } }).select("-password");
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -67,7 +67,7 @@ router.post("/", async (req, res) => {
       city,
       state,
       country,
-      type: "Customer",
+      type: "customer",
     });
 
     res.status(201).json(customer);
@@ -86,7 +86,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const updated = await User.findOneAndUpdate(
-      { _id: req.params.id, type: "Customer" },
+      { _id: req.params.id, type: { $in: ["customer", "Customer"] } },
       req.body,
       { new: true, runValidators: true }
     );
@@ -105,7 +105,7 @@ router.put("/:id", async (req, res) => {
 // ========================
 router.delete("/:id", async (req, res) => {
   try {
-    const deleted = await User.findOneAndDelete({ _id: req.params.id, type: "Customer" });
+    const deleted = await User.findOneAndDelete({ _id: req.params.id, type: { $in: ["customer", "Customer"] } });
     if (!deleted) {
       return res.status(404).json({ message: "Customer not found" });
     }

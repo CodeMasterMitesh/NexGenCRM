@@ -59,7 +59,7 @@ const LeadFollowup = () => {
             const response = await fetch(`${API_BASE_URL}/api/users`, { headers: authHeaders });
             if (!response.ok) throw new Error("Failed to load employees");
             const data = await response.json();
-            const staff = (data || []).filter((item) => item.type !== "Lead");
+            const staff = (data || []).filter((item) => (item.type || "").toLowerCase() !== "lead");
             setEmployees(staff);
         } catch {
             setEmployees([]);

@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Style.css";
 import { useAuth } from "./compenents/auth/AuthContext.jsx";
-// import { EventsBtn } from "./compenents/Events";
-// import {Greeting} from "./compenents/EventProps";
-import {EventPropagation} from "./compenents/EventPropagation";
-import { StateManagement } from "./compenents/StateManagement";
 const Users = () => {
     const navigate = useNavigate();
     const { token } = useAuth();
@@ -28,7 +24,11 @@ const Users = () => {
                 throw new Error("Failed to load users");
             }
             const data = await response.json();
-            setUsers(data);
+            const filteredUsers = (data || []).filter((item) => {
+                const type = (item.type || "").toLowerCase();
+                return type === "users" || type === "user" || type === "";
+            });
+            setUsers(filteredUsers);
             setError("");
         } catch (err) {
             setError(err.message || "Unable to load users");
@@ -75,7 +75,6 @@ const Users = () => {
                     <p className="text-muted mb-0">Manage your team and roles</p>
                 </div>
                 <div className="d-flex align-items-center gap-2">
-                    <StateManagement className="btn btn-outline-secondary" />
                     <button
                         className="btn btn-primary"
                         onClick={() => navigate("/add-user")}

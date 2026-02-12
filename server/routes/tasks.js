@@ -8,7 +8,16 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const isAdmin = req.user?.role === "Admin";
+    const userId = req.user?.sub;
+    const userName = req.user?.name;
+    const filter = isAdmin
+      ? {}
+      : {
+          $or: [{ assignedTo: userId }, { assignedTo: userName }],
+        };
+
+    const tasks = await Task.find(filter).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (error) {
     console.error("Error fetching tasks:", error);
