@@ -26,6 +26,7 @@ import Quotations from "./Quotations.jsx";
 import AddQuotation from "./AddQuotation.jsx";
 import ProformaInvoices from "./ProformaInvoices.jsx";
 import AddProformaInvoice from "./AddProformaInvoice.jsx";
+import Reports from "./Reports.jsx";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -158,6 +159,10 @@ let router = createBrowserRouter([
         {
           path: "/edit-proforma-invoice/:id",
           element: <AddProformaInvoice/>,
+        },
+        {
+          path: "/reports",
+          element: <Reports/>,
         },
       ],
     },

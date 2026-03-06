@@ -11,6 +11,7 @@ import productsRouter from "./routes/products.js";
 import inquiriesRouter from "./routes/inquiries.js";
 import quotationsRouter from "./routes/quotations.js";
 import proformaInvoicesRouter from "./routes/proformaInvoices.js";
+import reportsRouter from "./routes/reports.js";
 import connectDB from "./config/db.js";
 import seedUsers from "./seeders/seedUsers.js";
 import auth from "./middleware/auth.js";
@@ -39,6 +40,7 @@ app.use("/api/products", auth, productsRouter);
 app.use("/api/inquiries", auth, inquiriesRouter);
 app.use("/api/quotations", auth, quotationsRouter);
 app.use("/api/proforma-invoices", auth, proformaInvoicesRouter);
+app.use("/api/reports", auth, reportsRouter);
 
 // Initialize database and start server
 const startServer = async () => {

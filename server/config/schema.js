@@ -112,6 +112,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    convertedCustomerId: {
+      type: String,
+      default: "",
+    },
+    convertedAt: {
+      type: Date,
+    },
+    convertedBy: {
+      type: String,
+      default: "",
+    },
     profilePhoto: {
       type: String,
       default: "",

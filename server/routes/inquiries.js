@@ -1,12 +1,13 @@
 import express from "express";
 import Inquiry from "../config/inquirySchema.js";
+import { buildRoleFilter, isAssignedToUser } from "../utils/scope.js";
 
 const router = express.Router();
 
 // GET - list inquiries
 router.get("/", async (req, res) => {
   try {
-    const inquiries = await Inquiry.find().sort({ createdAt: -1 });
+    const inquiries = await Inquiry.find(buildRoleFilter(req, {})).sort({ createdAt: -1 });
     res.json(inquiries);
   } catch (error) {
     console.error("Error fetching inquiries:", error);
@@ -20,6 +21,9 @@ router.get("/:id", async (req, res) => {
     const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) {
       return res.status(404).json({ message: "Inquiry not found" });
+    }
+    if (!isAssignedToUser(inquiry.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
     }
     res.json(inquiry);
   } catch (error) {
@@ -46,6 +50,13 @@ router.post("/", async (req, res) => {
 // PUT - update inquiry
 router.put("/:id", async (req, res) => {
   try {
+    const existing = await Inquiry.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "Inquiry not found" });
+    }
+    if (!isAssignedToUser(existing.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const updated = await Inquiry.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -63,6 +74,13 @@ router.put("/:id", async (req, res) => {
 // DELETE - remove inquiry
 router.delete("/:id", async (req, res) => {
   try {
+    const existing = await Inquiry.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ message: "Inquiry not found" });
+    }
+    if (!isAssignedToUser(existing.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const deleted = await Inquiry.findByIdAndDelete(req.params.id);
     if (!deleted) {
       return res.status(404).json({ message: "Inquiry not found" });
@@ -80,6 +98,9 @@ router.post("/:id/followups", async (req, res) => {
     const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) {
       return res.status(404).json({ message: "Inquiry not found" });
+    }
+    if (!isAssignedToUser(inquiry.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
     }
     const { followupDate, followupTime, status, priority, remarks } = req.body;
     if (!followupDate) {
@@ -109,6 +130,9 @@ router.put("/:id/followups/:followupId", async (req, res) => {
     if (!inquiry) {
       return res.status(404).json({ message: "Inquiry not found" });
     }
+    if (!isAssignedToUser(inquiry.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     const followup = inquiry.followups.find((f) => f._id.toString() === req.params.followupId);
     if (!followup) {
       return res.status(404).json({ message: "Followup not found" });
@@ -132,6 +156,9 @@ router.delete("/:id/followups/:followupId", async (req, res) => {
     const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) {
       return res.status(404).json({ message: "Inquiry not found" });
+    }
+    if (!isAssignedToUser(inquiry.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
     }
     inquiry.followups = inquiry.followups.filter((f) => f._id.toString() !== req.params.followupId);
     await inquiry.save();

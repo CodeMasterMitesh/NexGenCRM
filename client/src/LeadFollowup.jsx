@@ -19,6 +19,7 @@ const LeadFollowup = () => {
     const [assignedFilter, setAssignedFilter] = useState("");
     const [editingId, setEditingId] = useState(null);
     const [editData, setEditData] = useState({});
+    const [converting, setConverting] = useState(false);
 
     const [formData, setFormData] = useState({
         followupType: "Call",
@@ -273,6 +274,29 @@ const LeadFollowup = () => {
         }
     };
 
+    const convertLead = async () => {
+        const ok = window.confirm("Convert this lead to customer?");
+        if (!ok) return;
+        try {
+            setConverting(true);
+            const response = await fetch(`${API_BASE_URL}/api/leads/${id}/convert-to-customer`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...authHeaders },
+            });
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.message || "Failed to convert lead");
+            }
+            const data = await response.json();
+            setLead(data.lead);
+            navigate(`/edit-customer/${data.customer?._id}`);
+        } catch (err) {
+            setError(err.message || "Unable to convert lead");
+        } finally {
+            setConverting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="followup-page container-fluid py-4">
@@ -296,7 +320,12 @@ const LeadFollowup = () => {
                     <h1 className="page-title mb-1">Lead Follow-up</h1>
                     <p className="text-muted mb-0">Track every discussion and next action</p>
                 </div>
-                <button className="btn btn-outline-secondary" onClick={() => navigate("/leads")}>Back to Leads</button>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-outline-warning" onClick={convertLead} disabled={lead?.status === "Converted" || converting}>
+                        {lead?.status === "Converted" ? "Converted" : converting ? "Converting..." : "Convert To Customer"}
+                    </button>
+                    <button className="btn btn-outline-secondary" onClick={() => navigate("/leads")}>Back to Leads</button>
+                </div>
             </div>
 
             {error && <div className="alert alert-danger mb-4">{error}</div>}

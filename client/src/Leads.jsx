@@ -15,6 +15,7 @@ const Leads = () => {
     const [statusFilter, setStatusFilter] = useState("");
     const [assignedFilter, setAssignedFilter] = useState("");
     const [employees, setEmployees] = useState([]);
+    const [convertingId, setConvertingId] = useState("");
 
     const API_BASE_URL = "http://localhost:5500";
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
@@ -111,6 +112,27 @@ const Leads = () => {
     const handleFollowup = (leadId) => {
         navigate(`/lead-followup/${leadId}`);
     };
+
+    const handleConvert = async (leadId) => {
+        const ok = window.confirm("Convert this lead to customer?");
+        if (!ok) return;
+        try {
+            setConvertingId(leadId);
+            const response = await fetch(`${API_BASE_URL}/api/leads/${leadId}/convert-to-customer`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...authHeaders },
+            });
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.message || "Failed to convert lead");
+            }
+            await fetchLeads();
+        } catch (err) {
+            setError(err.message || "Failed to convert lead");
+        } finally {
+            setConvertingId("");
+        }
+    };
     return (
         <div className="comman-page container-fluid py-4">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -206,6 +228,13 @@ const Leads = () => {
                                             onClick={() => navigate(`/add-inquiry?sourceType=lead&sourceId=${lead._id}`)}
                                         >
                                             Inquiry
+                                        </button>
+                                        <button
+                                            className="btn btn-sm btn-outline-warning"
+                                            onClick={() => handleConvert(lead._id)}
+                                            disabled={lead.status === "Converted" || convertingId === lead._id}
+                                        >
+                                            {lead.status === "Converted" ? "Converted" : convertingId === lead._id ? "Converting..." : "Convert"}
                                         </button>
                                     </div>
                                 </td>

@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../config/schema.js";
+import { buildRoleFilter, isAssignedToUser } from "../utils/scope.js";
 
 const router = express.Router();
 
@@ -9,15 +10,7 @@ const router = express.Router();
 // ========================
 router.get("/", async (req, res) => {
   try {
-    const isAdmin = req.user?.role === "Admin";
-    const userId = req.user?.sub;
-    const userName = req.user?.name;
-    const filter = isAdmin
-      ? { type: { $in: ["lead", "Lead"] } }
-      : {
-          type: { $in: ["lead", "Lead"] },
-          $or: [{ assignedTo: userId }, { assignedTo: userName }],
-        };
+    const filter = buildRoleFilter(req, { type: { $in: ["lead", "Lead"] } });
 
     const leads = await User.find(filter);
     // console.log("Leads fetched:", leads);
@@ -38,15 +31,7 @@ router.get("/dashboard/followups/summary", async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const isAdmin = req.user?.role === "Admin";
-    const userId = req.user?.sub;
-    const userName = req.user?.name;
-    const filter = isAdmin
-      ? { type: { $in: ["lead", "Lead"] } }
-      : {
-          type: { $in: ["lead", "Lead"] },
-          $or: [{ assignedTo: userId }, { assignedTo: userName }],
-        };
+    const filter = buildRoleFilter(req, { type: { $in: ["lead", "Lead"] } });
 
     const leads = await User.find(filter);
     const todayFollowups = [];
@@ -131,6 +116,9 @@ router.post("/", async (req, res) => {
       });
     }
 
+    const assignedToValue =
+      typeof assignedTo === "string" ? assignedTo.trim() : assignedTo;
+
     const newUser = new User({
       name,
       email,
@@ -143,7 +131,7 @@ router.post("/", async (req, res) => {
       expectedValue,
       notes,
       customerCategory,
-      assignedTo,
+      assignedTo: assignedToValue || "",
       enteredBy,
       priority,
       address,
@@ -171,6 +159,9 @@ router.post("/", async (req, res) => {
 // ========================
 router.put("/:id", async (req, res) => {
   try {
+    if (req.body.assignedTo !== undefined && typeof req.body.assignedTo === "string") {
+      req.body.assignedTo = req.body.assignedTo.trim();
+    }
     const updatedLead = await User.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -187,6 +178,62 @@ router.put("/:id", async (req, res) => {
     if (error.name === "CastError") {
       return res.status(400).json({ message: "Invalid lead ID" });
     }
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ========================
+// POST - Convert lead to customer
+// ========================
+router.post("/:id/convert-to-customer", async (req, res) => {
+  try {
+    const lead = await User.findById(req.params.id);
+    if (!lead || !["lead", "Lead"].includes(lead.type)) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+    if (!isAssignedToUser(lead.assignedTo, req)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    if (lead.convertedCustomerId || lead.status === "Converted") {
+      return res.status(400).json({ message: "Lead is already converted" });
+    }
+
+    const existingCustomer = await User.findOne({
+      email: lead.email,
+      type: { $in: ["customer", "Customer"] },
+    });
+
+    let customer = existingCustomer;
+    if (!customer) {
+      customer = await User.create({
+        name: lead.name,
+        email: lead.email,
+        mobile: lead.mobile,
+        mobile2: lead.mobile2 || "",
+        contactPerson: lead.contactPerson || "",
+        email2: lead.email2 || "",
+        leadSource: lead.leadSource || "Lead Conversion",
+        status: "Active",
+        notes: lead.notes || "",
+        customerCategory: lead.customerCategory || "",
+        address: lead.address || "",
+        city: lead.city || "",
+        state: lead.state || "",
+        country: lead.country || "",
+        type: "customer",
+      });
+    }
+
+    lead.status = "Converted";
+    lead.convertedCustomerId = customer._id.toString();
+    lead.convertedAt = new Date();
+    lead.convertedBy = req.user?.name || "";
+    await lead.save();
+
+    res.json({ message: "Lead converted successfully", lead, customer });
+  } catch (error) {
+    console.error("Error converting lead:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

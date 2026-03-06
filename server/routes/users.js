@@ -12,6 +12,7 @@ router.get("/", async (req, res) => {
     const users = await User.find({
       type: { $in: [null, "", "users", "user", "User", "Users"] },
     }).select("-password");
+    // console.log(users);
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -25,7 +26,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
-
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

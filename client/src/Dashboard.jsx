@@ -1,209 +1,181 @@
 import "./Dashboard.css";
-
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./compenents/auth/AuthContext.jsx";
 
+const API_BASE_URL = "http://localhost:5500";
+
 const Dashboard = () => {
-    const navigate = useNavigate();
-    const { token, user } = useAuth();
-    const [followupSummary, setFollowupSummary] = useState({ todayFollowups: [], overdueFollowups: [], upcomingFollowups: [] });
-    const [stats, setStats] = useState({ totalCustomers: 0, activeLeads: 0, totalSales: 0, pendingTasks: 0 });
-    const [loading, setLoading] = useState(true);
-    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-    const isAdmin = user?.role === "Admin";
-    const userId = user?.id;
-    const userName = user?.name;
+  const navigate = useNavigate();
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [summary, setSummary] = useState(null);
 
-    useEffect(() => {
-        const fetchFollowupSummary = async () => {
-            setLoading(true);
-            try {
-                const response = await fetch("http://localhost:5500/api/leads/dashboard/followups/summary", {
-                    headers: authHeaders,
-                });
-                if (!response.ok) throw new Error("Failed to load followup summary");
-                const data = await response.json();
-                const filterFollowups = (items) => {
-                    if (isAdmin) return items;
-                    return (items || []).filter((item) => {
-                        const assigned = item.lead?.assignedTo || item.followUp?.assignTo;
-                        return assigned === userId || assigned === userName;
-                    });
-                };
-                setFollowupSummary({
-                    todayFollowups: filterFollowups(data.todayFollowups),
-                    overdueFollowups: filterFollowups(data.overdueFollowups),
-                    upcomingFollowups: filterFollowups(data.upcomingFollowups),
-                });
-            } catch (err) {
-                setFollowupSummary({ todayFollowups: [], overdueFollowups: [], upcomingFollowups: [] });
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchFollowupSummary();
-    }, [token, userId, userName, isAdmin]);
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-    useEffect(() => {
-        const fetchSummary = async () => {
-            try {
-                const response = await fetch("http://localhost:5500/api/dashboard/summary", {
-                    headers: authHeaders,
-                });
-                if (!response.ok) throw new Error("Failed to load dashboard summary");
-                const data = await response.json();
-                setStats({
-                    totalCustomers: data.totalCustomers || 0,
-                    activeLeads: data.activeLeads || 0,
-                    totalSales: data.totalSales || 0,
-                    pendingTasks: data.pendingTasks || 0,
-                });
-            } catch {
-                setStats({ totalCustomers: 0, activeLeads: 0, totalSales: 0, pendingTasks: 0 });
-            }
-        };
-        fetchSummary();
-    }, [token]);
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/summary`, { headers: authHeaders });
+        if (!response.ok) throw new Error("Failed to load dashboard");
+        const data = await response.json();
+        setSummary(data);
+      } catch (err) {
+        setError(err.message || "Unable to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [token]);
 
-    return (
-        <div className="dashboard container-fluid py-4">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                <div>
-                    <h1 className="page-title mb-1">Dashboard</h1>
-                    <p className="text-muted mb-0">Overview of your CRM performance</p>
-                </div>
-            </div>
+  const leadPipeline = useMemo(() => {
+    if (!summary) return [];
+    return [
+      { title: "New Leads", value: summary.stageCounts?.new || 0, className: "lead-band blue" },
+      { title: "Qualified", value: summary.stageCounts?.qualified || 0, className: "lead-band cyan" },
+      { title: "Won", value: summary.stageCounts?.won || 0, className: "lead-band green" },
+    ];
+  }, [summary]);
 
-            <div className="row g-4 mb-4">
-                <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Total Customers" value={stats.totalCustomers} icon="👥" color="#667eea" />
-                </div>
-                <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Active Leads" value={stats.activeLeads} icon="🎯" color="#f093fb" />
-                </div>
-                <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Total Sales" value={`₹${stats.totalSales.toLocaleString()}`} icon="💰" color="#4facfe" />
-                </div>
-                <div className="col-12 col-md-6 col-xl-3">
-                    <StatsCard title="Pending Tasks" value={stats.pendingTasks} icon="📋" color="#fa709a" />
-                </div>
-            </div>
+  if (loading) {
+    return <div className="container-fluid py-4 text-muted">Loading dashboard...</div>;
+  }
 
+  if (error) {
+    return <div className="container-fluid py-4"><div className="alert alert-danger">{error}</div></div>;
+  }
 
-            <div className="row g-4">
-                <div className="col-12 col-lg-4">
-                    <div className="card border-0 shadow-sm h-100">
-                        <div className="card-header bg-white border-0 pb-0">
-                            <h5 className="mb-0">Today's Followup Leads</h5>
-                        </div>
-                        <div className="card-body">
-                            {loading ? <div>Loading...</div> : (
-                                <div className="list-group list-group-flush">
-                                    {followupSummary.todayFollowups.length === 0 && <div className="text-muted">No follow-ups for today.</div>}
-                                    {followupSummary.todayFollowups.map((item, idx) => (
-                                        <LeadFollowupItem key={idx} lead={item.lead} followUp={item.followUp} onOpen={() => navigate(`/lead-followup/${item.lead._id}`)} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <div className="col-12 col-lg-4">
-                    <div className="card border-0 shadow-sm h-100">
-                        <div className="card-header bg-white border-0 pb-0">
-                            <h5 className="mb-0">Overdue Followup Leads</h5>
-                        </div>
-                        <div className="card-body">
-                            {loading ? <div>Loading...</div> : (
-                                <div className="list-group list-group-flush">
-                                    {followupSummary.overdueFollowups.length === 0 && <div className="text-muted">No overdue follow-ups.</div>}
-                                    {followupSummary.overdueFollowups.map((item, idx) => (
-                                        <LeadFollowupItem key={idx} lead={item.lead} followUp={item.followUp} onOpen={() => navigate(`/lead-followup/${item.lead._id}`)} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <div className="col-12 col-lg-4">
-                    <div className="card border-0 shadow-sm h-100">
-                        <div className="card-header bg-white border-0 pb-0">
-                            <h5 className="mb-0">Upcoming Followup Leads</h5>
-                        </div>
-                        <div className="card-body">
-                            {loading ? <div>Loading...</div> : (
-                                <div className="list-group list-group-flush">
-                                    {followupSummary.upcomingFollowups.length === 0 && <div className="text-muted">No upcoming follow-ups.</div>}
-                                    {followupSummary.upcomingFollowups.map((item, idx) => (
-                                        <LeadFollowupItem key={idx} lead={item.lead} followUp={item.followUp} onOpen={() => navigate(`/lead-followup/${item.lead._id}`)} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="dashboard-page container-fluid py-4">
+      <div className="dashboard-top mb-4">
+        <div>
+          <h1 className="mb-1">Dashboard</h1>
+          <p className="text-muted mb-0">Live CRM snapshot with lead, inquiry and revenue insights</p>
         </div>
-    );
+        <button className="btn btn-success" onClick={() => navigate("/add-lead")}>+ Add Lead</button>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-12 col-xl-8">
+          <div className="pipeline-wrap">
+            {leadPipeline.map((item) => (
+              <div key={item.title} className={item.className}>
+                <div className="lead-title">{item.title}</div>
+                <div className="lead-value">{item.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="col-12 col-xl-4">
+          <div className="side-card">
+            <h5>Follow-up Reminders</h5>
+            <ReminderList
+              rows={summary?.leadFollowups?.today || []}
+              emptyLabel="No lead follow-ups for today"
+              onOpen={(row) => navigate(`/lead-followup/${row.leadId}`)}
+              type="lead"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-12 col-md-6 col-xl-3"><Kpi title="Customers" value={summary?.totalCustomers || 0} /></div>
+        <div className="col-12 col-md-6 col-xl-3"><Kpi title="Active Leads" value={summary?.stageCounts?.active || 0} /></div>
+        <div className="col-12 col-md-6 col-xl-3"><Kpi title="Pending Tasks" value={summary?.pendingTasks || 0} /></div>
+        <div className="col-12 col-md-6 col-xl-3"><Kpi title="Converted Revenue" value={`INR ${(summary?.revenue?.convertedLeadRevenue || 0).toLocaleString("en-IN")}`} /></div>
+      </div>
+
+      <div className="row g-4">
+        <div className="col-12 col-lg-4">
+          <div className="panel-card">
+            <h5>Lead Follow-up Buckets</h5>
+            <BucketRow label="Today" value={summary?.leadFollowups?.today?.length || 0} />
+            <BucketRow label="Overdue" value={summary?.leadFollowups?.overdue?.length || 0} />
+            <BucketRow label="Upcoming" value={summary?.leadFollowups?.upcoming?.length || 0} />
+          </div>
+        </div>
+        <div className="col-12 col-lg-4">
+          <div className="panel-card">
+            <h5>Inquiry Follow-up Buckets</h5>
+            <BucketRow label="Today" value={summary?.inquiryFollowups?.today?.length || 0} />
+            <BucketRow label="Overdue" value={summary?.inquiryFollowups?.overdue?.length || 0} />
+            <BucketRow label="Upcoming" value={summary?.inquiryFollowups?.upcoming?.length || 0} />
+          </div>
+        </div>
+        <div className="col-12 col-lg-4">
+          <div className="panel-card">
+            <h5>Commercial Overview</h5>
+            <BucketRow label="Quotation Value" value={`INR ${(summary?.revenue?.quotationValue || 0).toLocaleString("en-IN")}`} />
+            <BucketRow label="Proforma Value" value={`INR ${(summary?.revenue?.proformaValue || 0).toLocaleString("en-IN")}`} />
+            <BucketRow label="Paid Proforma" value={summary?.proforma?.paid || 0} />
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-4 mt-1">
+        <div className="col-12 col-lg-6">
+          <div className="side-card">
+            <h5>Overdue Lead Follow-ups</h5>
+            <ReminderList
+              rows={summary?.leadFollowups?.overdue || []}
+              emptyLabel="No overdue lead follow-ups"
+              onOpen={(row) => navigate(`/lead-followup/${row.leadId}`)}
+              type="lead"
+            />
+          </div>
+        </div>
+        <div className="col-12 col-lg-6">
+          <div className="side-card">
+            <h5>Today Inquiry Follow-ups</h5>
+            <ReminderList
+              rows={summary?.inquiryFollowups?.today || []}
+              emptyLabel="No inquiry follow-ups for today"
+              onOpen={(row) => navigate(`/inquiry-followup/${row.inquiryId}`)}
+              type="inquiry"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-// Lead followup item component
-const LeadFollowupItem = ({ lead, followUp, onOpen }) => (
-    <button type="button" className="list-group-item d-flex justify-content-between align-items-center border-0 px-0 text-start bg-transparent" onClick={onOpen}>
-        <div>
-            <strong>{lead.name}</strong>
-            <div className="text-muted small">{lead.contactPerson || "-"} | {lead.mobile}</div>
-            <div className="text-muted small">{new Date(followUp.date).toLocaleString()} - {followUp.note}</div>
-            <div className="text-muted small">Priority: {followUp.priority || lead.priority || "-"} | Assigned: {followUp.assignTo || lead.assignedTo || "-"}</div>
-            <div className="text-muted small">Enter By: {followUp.enterBy || lead.enteredBy || "-"}</div>
-        </div>
-        <span className={`badge ${followUp.status === "Overdue" ? "text-bg-danger" : followUp.status === "Scheduled" ? "text-bg-warning" : "text-bg-success"}`}>
-            {followUp.status}
-        </span>
-    </button>
+const Kpi = ({ title, value }) => (
+  <div className="kpi-card">
+    <div className="kpi-value">{value}</div>
+    <div className="kpi-label">{title}</div>
+  </div>
 );
 
-// Stats card component - shows numbers
-const StatsCard = ({ title, value, icon, color }) => {
-    return (
-        <div className="card border-0 shadow-sm h-100">
-            <div className="card-body d-flex align-items-center gap-3">
-                <div className="stats-icon" style={{ color }}>
-                    {icon}
-                </div>
-                <div>
-                    <h3 className="mb-1">{value}</h3>
-                    <p className="text-muted mb-0">{title}</p>
-                </div>
-            </div>
-        </div>
-    );
-};
+const BucketRow = ({ label, value }) => (
+  <div className="bucket-row">
+    <span>{label}</span>
+    <strong>{value}</strong>
+  </div>
+);
 
-// Lead item component
-const LeadItem = ({ name, company, status }) => {
-    return (
-        <div className="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-            <div>
-                <strong>{name}</strong>
-                <div className="text-muted small">{company}</div>
-            </div>
-            <span className={`badge ${status.toLowerCase() === "hot" ? "text-bg-danger" : status.toLowerCase() === "warm" ? "text-bg-warning" : "text-bg-info"}`}>
-                {status}
-            </span>
-        </div>
-    );
-};
+const ReminderList = ({ rows, emptyLabel, onOpen, type }) => {
+  if (!rows.length) {
+    return <div className="text-muted small">{emptyLabel}</div>;
+  }
 
-// Activity item component
-const ActivityItem = ({ action, time }) => {
-    return (
-        <div className="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-            <span>{action}</span>
-            <span className="text-muted small">{time}</span>
-        </div>
-    );
+  return (
+    <div className="reminder-list">
+      {rows.slice(0, 5).map((row, idx) => (
+        <button key={idx} type="button" className="reminder-item" onClick={() => onOpen(row)}>
+          <div>
+            <div className="fw-semibold">{type === "lead" ? row.leadName : row.sourceName}</div>
+            <div className="small text-muted">{row.mobile || "-"} | {row.assignedTo || "-"}</div>
+          </div>
+          <span className="badge text-bg-warning">{row.priority || row.status || "Open"}</span>
+        </button>
+      ))}
+    </div>
+  );
 };
 
 export default Dashboard;

@@ -222,6 +222,23 @@ const AddQuotation = () => {
         }
     };
 
+    const downloadPdf = async () => {
+        if (!id) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/quotations/${id}/pdf`, { headers: authHeaders });
+            if (!response.ok) throw new Error("Failed to generate PDF");
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `quotation-${id}.pdf`;
+            link.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            setError(err.message || "Unable to download quotation PDF");
+        }
+    };
+
     return (
         <div className="container-fluid py-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -232,6 +249,11 @@ const AddQuotation = () => {
                 <button type="button" className="btn btn-outline-secondary" onClick={() => navigate("/quotations")}>
                     Back
                 </button>
+                {isEditMode && (
+                    <button type="button" className="btn btn-outline-info ms-2" onClick={downloadPdf}>
+                        Download PDF
+                    </button>
+                )}
             </div>
 
             <div className="card border-0 shadow-sm">
