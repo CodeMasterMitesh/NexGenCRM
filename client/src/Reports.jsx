@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "./compenents/auth/AuthContext.jsx";
 import "./Style.css";
+import PageSectionHeader from "./compenents/list/PageSectionHeader.jsx";
+import TablePagination from "./compenents/list/TablePagination.jsx";
+import useClientPagination from "./compenents/list/useClientPagination.js";
 
 const API_BASE_URL = "http://localhost:5500";
 
@@ -20,6 +23,7 @@ const Reports = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const pageSize = 10;
 
   const moduleName = searchParams.get("module") || "leads";
   const status = searchParams.get("status") || "";
@@ -49,9 +53,7 @@ const Reports = () => {
       if (sourceType) params.set("sourceType", sourceType);
       if (from) params.set("from", from);
       if (to) params.set("to", to);
-      const response = await fetch(`${API_BASE_URL}/api/reports/${moduleName}?${params.toString()}`, {
-        headers: authHeaders,
-      });
+      const response = await fetch(`${API_BASE_URL}/api/reports/${moduleName}?${params.toString()}`, { headers: authHeaders });
       if (!response.ok) throw new Error("Failed to load report");
       const data = await response.json();
       setRows(data.rows || []);
@@ -67,10 +69,8 @@ const Reports = () => {
     fetchReport();
   }, [moduleName, status, assignedTo, sourceType, from, to, token]);
 
-  const columns = useMemo(() => {
-    if (!rows.length) return [];
-    return Object.keys(rows[0]);
-  }, [rows]);
+  const columns = useMemo(() => (rows.length ? Object.keys(rows[0]) : []), [rows]);
+  const { currentPage, totalPages, totalItems, pagedItems, onPageChange } = useClientPagination(rows, pageSize);
 
   const downloadCsv = async () => {
     const params = new URLSearchParams();
@@ -97,24 +97,17 @@ const Reports = () => {
 
   return (
     <div className="comman-page container-fluid py-4">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-          <h1 className="page-title mb-1">Reports</h1>
-          <p className="text-muted mb-0">All modules reporting with CSV export</p>
-        </div>
-        <button className="btn btn-outline-success" onClick={downloadCsv}>Export CSV</button>
-      </div>
+      <PageSectionHeader
+        title="Reports"
+        subtitle="All modules reporting with CSV export"
+        breadcrumbItems={[{ label: "Home", to: "/dashboard" }, { label: "Reports" }]}
+        actions={<button className="btn btn-outline-success" onClick={downloadCsv}>Export</button>}
+      />
 
       <div className="card border-0 shadow-sm mb-3">
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-12 col-md-4">
-              <select className="form-select" value={moduleName} onChange={(e) => updateQuery({ module: e.target.value })}>
-                {moduleOptions.map((item) => (
-                  <option key={item.value} value={item.value}>{item.label}</option>
-                ))}
-              </select>
-            </div>
+            <div className="col-12 col-md-4"><select className="form-select" value={moduleName} onChange={(e) => updateQuery({ module: e.target.value })}>{moduleOptions.map((item) => (<option key={item.value} value={item.value}>{item.label}</option>))}</select></div>
             <div className="col-6 col-md-2"><input type="text" className="form-control" placeholder="Status" value={status} onChange={(e) => updateQuery({ status: e.target.value })} /></div>
             <div className="col-6 col-md-2"><input type="text" className="form-control" placeholder="Assignee" value={assignedTo} onChange={(e) => updateQuery({ assignedTo: e.target.value })} /></div>
             <div className="col-6 col-md-2"><input type="text" className="form-control" placeholder="Source" value={sourceType} onChange={(e) => updateQuery({ sourceType: e.target.value })} /></div>
@@ -129,30 +122,25 @@ const Reports = () => {
       <div className="card border-0 shadow-sm table-card">
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-striped align-middle mb-0">
+            <table className="table table-bordered table-hover align-middle mb-0">
               <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col}>{col}</th>
-                  ))}
-                </tr>
+                <tr>{columns.map((col) => (<th key={col}>{col}</th>))}</tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr><td colSpan={Math.max(columns.length, 1)} className="text-center text-muted py-4">Loading report...</td></tr>
-                ) : rows.length === 0 ? (
+                ) : pagedItems.length === 0 ? (
                   <tr><td colSpan={Math.max(columns.length, 1)} className="text-center text-muted py-4">No data found.</td></tr>
                 ) : (
-                  rows.map((row, idx) => (
-                    <tr key={idx}>
-                      {columns.map((col) => (
-                        <td key={`${idx}-${col}`}>{formatCell(row[col])}</td>
-                      ))}
-                    </tr>
+                  pagedItems.map((row, idx) => (
+                    <tr key={idx}>{columns.map((col) => (<td key={`${idx}-${col}`}>{formatCell(row[col])}</td>))}</tr>
                   ))
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="px-3 pb-3">
+            <TablePagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={onPageChange} />
           </div>
         </div>
       </div>
@@ -163,9 +151,7 @@ const Reports = () => {
 const formatCell = (value) => {
   if (value === null || value === undefined || value === "") return "-";
   const date = new Date(value);
-  if (!Number.isNaN(date.getTime()) && String(value).includes("T")) {
-    return date.toLocaleString();
-  }
+  if (!Number.isNaN(date.getTime()) && String(value).includes("T")) return date.toLocaleString();
   return String(value);
 };
 
