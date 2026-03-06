@@ -11,4 +11,50 @@
 
 .table-card {
     border-radius: 16px;
+    border: 1px solid #d7e0ea !important;
+    overflow: hidden;
+}
+
+.table-card .table {
+    margin-bottom: 0;
+}
+
+.table-card .table thead th {
+    background: #f3f7fc;
+    border: 1px solid #d7e0ea;
+    color: #1e3550;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table-card .table tbody td {
+    border: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.list-header-wrap {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 16px 18px;
+}
+
+.list-breadcrumb {
+    --bs-breadcrumb-divider-color: #6c7a89;
+    --bs-breadcrumb-item-active-color: #1f2937;
+    font-size: 0.86rem;
+}
+
+.list-breadcrumb a {
+    color: #0b63ce;
+    text-decoration: none;
+}
+
+.list-header-actions .btn {
+    min-width: 98px;
+}
+
+.pagination-wrap {
+    border-top: 1px solid #e6edf5;
+    padding-top: 12px;
 }
