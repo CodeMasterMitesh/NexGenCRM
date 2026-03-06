@@ -206,13 +206,33 @@ router.post("/:id/convert-to-customer", async (req, res) => {
 
     let customer = existingCustomer;
     if (!customer) {
+      const baseEmail = String(lead.email || "").trim().toLowerCase();
+      let customerEmail = baseEmail;
+
+      // Same collection has unique email for all user types; generate an alias for customer if needed.
+      if (customerEmail) {
+        let counter = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const conflict = await User.findOne({ email: customerEmail }).select("_id");
+          if (!conflict) break;
+          counter += 1;
+          const parts = baseEmail.split("@");
+          if (parts.length === 2) {
+            customerEmail = `${parts[0]}+customer${counter}@${parts[1]}`;
+          } else {
+            customerEmail = `${baseEmail}+customer${counter}`;
+          }
+        }
+      }
+
       customer = await User.create({
         name: lead.name,
-        email: lead.email,
+        email: customerEmail,
         mobile: lead.mobile,
         mobile2: lead.mobile2 || "",
         contactPerson: lead.contactPerson || "",
-        email2: lead.email2 || "",
+        email2: lead.email2 || lead.email || "",
         leadSource: lead.leadSource || "Lead Conversion",
         status: "Active",
         notes: lead.notes || "",
@@ -234,6 +254,9 @@ router.post("/:id/convert-to-customer", async (req, res) => {
     res.json({ message: "Lead converted successfully", lead, customer });
   } catch (error) {
     console.error("Error converting lead:", error);
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "Unable to convert due to duplicate unique data." });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 });
